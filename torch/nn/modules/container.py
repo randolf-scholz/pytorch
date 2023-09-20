@@ -1,5 +1,6 @@
 import warnings
 from collections import OrderedDict, abc as container_abcs
+from collections.abc import MutableMapping, MutableSequence
 from itertools import chain, islice
 import operator
 
@@ -8,12 +9,17 @@ from .module import Module
 from ..parameter import Parameter
 from torch._jit_internal import _copy_to_script_wrapper
 
-from typing import Any, Dict, Iterable, Iterator, Mapping, Optional, overload, Tuple, TypeVar, Union
+from typing import Any, Dict, Iterable, Iterator, Mapping, Optional, overload, Tuple, TypeVar, Union, SupportsIndex
+from typing_extensions import Self, override
+
 
 __all__ = ['Container', 'Sequential', 'ModuleList', 'ModuleDict', 'ParameterList', 'ParameterDict']
 
-T = TypeVar('T', bound=Module)
-
+# For type hints of generics see: https://github.com/python/typeshed/blob/main/stdlib/typing.pyi
+# For type hints of builtins see: https://github.com/python/typeshed/blob/main/stdlib/builtins.pyi
+M = TypeVar('M', bound=Module)
+M_other = TypeVar('M_other', bound=Module)
+P = TypeVar('P', bound=Parameter)
 
 # Copied from torch.nn.modules.module, required for a custom __repr__ for ModuleList
 def _addindent(s_, numSpaces):
@@ -39,7 +45,7 @@ class Container(Module):
             self.add_module(key, value)
 
 
-class Sequential(Module):
+class Sequential(Module, MutableSequence[M]):
     r"""A sequential container.
     Modules will be added to it in the order they are passed in the
     constructor. Alternatively, an ``OrderedDict`` of modules can be
@@ -84,7 +90,7 @@ class Sequential(Module):
                 ]))
     """
 
-    _modules: Dict[str, Module]  # type: ignore[assignment]
+    _modules: Dict[str, M]  # type: ignore[assignment]
 
     @overload
     def __init__(self, *args: Module) -> None:
@@ -103,7 +109,7 @@ class Sequential(Module):
             for idx, module in enumerate(args):
                 self.add_module(str(idx), module)
 
-    def _get_item_by_idx(self, iterator, idx) -> T:  # type: ignore[misc, type-var]
+    def _get_item_by_idx(self, iterator: Iterable[M], idx: SupportsIndex) -> M:  # type: ignore[misc, type-var]
         """Get the idx-th item of the iterator"""
         size = len(self)
         idx = operator.index(idx)
@@ -113,15 +119,30 @@ class Sequential(Module):
         return next(islice(iterator, idx, None))
 
     @_copy_to_script_wrapper
-    def __getitem__(self, idx: Union[slice, int]) -> Union['Sequential', T]:
+    def __getitem__(self, idx: Union[slice, int]) -> Union['Sequential', M]:
         if isinstance(idx, slice):
             return self.__class__(OrderedDict(list(self._modules.items())[idx]))
         else:
             return self._get_item_by_idx(self._modules.values(), idx)
 
-    def __setitem__(self, idx: int, module: Module) -> None:
-        key: str = self._get_item_by_idx(self._modules.keys(), idx)
-        return setattr(self, key, module)
+    @overload
+    def __setitem__(self, index: int, value: M) -> None: ...
+    @overload
+    def __setitem__(self, index: slice, value: Iterable[M]) -> None: ...
+    def __setitem__(self, index, value):
+        if isinstance(index, int) and isinstance(value, Module):
+            key: str = self._get_item_by_idx(self._modules.keys(), index)
+            return setattr(self, key, value)
+        if isinstance(index, slice) and isinstance(value, Iterable):
+            indices = range(index.start, index.stop, index.step or 1)
+            modules = list(value)  # needed to check lengths match
+            for index, module in zip(indices, modules):
+                self[index] = module
+        raise TypeError(
+            "Expected integer for index and module for value or slice "
+            f"and iterable of modules for value. Got: {type(index)} {type(value)}"
+        )
+
 
     def __delitem__(self, idx: Union[slice, int]) -> None:
         if isinstance(idx, slice):
@@ -138,7 +159,11 @@ class Sequential(Module):
     def __len__(self) -> int:
         return len(self._modules)
 
-    def __add__(self, other) -> 'Sequential':
+    @overload
+    def __add__(self, other: 'Sequential[M]') -> 'Sequential[M]': ...
+    @overload
+    def __add__(self, other: 'Sequential[M_other]') -> 'Sequential[M, M_other]': ...
+    def __add__(self, other):
         if isinstance(other, Sequential):
             ret = Sequential()
             for layer in self:
@@ -150,12 +175,17 @@ class Sequential(Module):
             raise ValueError('add operator supports only objects '
                              f'of Sequential class, but {str(type(other))} is given.')
 
-    def pop(self, key: Union[int, slice]) -> Module:
+
+    @overload
+    def pop(self, key: int = -1) -> M: ...
+    @overload
+    def pop(self, key: slice = ...) -> 'Sequential[M]': ...
+    def pop(self, key):
         v = self[key]
         del self[key]
         return v
 
-    def __iadd__(self, other) -> 'Sequential':
+    def __iadd__(self, other: Iterable[M]) -> Self:
         if isinstance(other, Sequential):
             offset = len(self)
             for i, module in enumerate(other):
@@ -165,7 +195,7 @@ class Sequential(Module):
             raise ValueError('add operator supports only objects '
                              f'of Sequential class, but {str(type(other))} is given.')
 
-    def __mul__(self, other: int) -> 'Sequential':
+    def __mul__(self, other: int) -> 'Sequential[M]':
         if not isinstance(other, int):
             raise TypeError(f"unsupported operand type(s) for *: {type(self)} and {type(other)}")
         elif (other <= 0):
@@ -179,10 +209,10 @@ class Sequential(Module):
                     offset += 1
             return combined
 
-    def __rmul__(self, other: int) -> 'Sequential':
+    def __rmul__(self, other: int) -> 'Sequential[M]':
         return self.__mul__(other)
 
-    def __imul__(self, other: int) -> 'Sequential':
+    def __imul__(self, other: int) -> Self:
         if not isinstance(other, int):
             raise TypeError(f"unsupported operand type(s) for *: {type(self)} and {type(other)}")
         elif (other <= 0):
@@ -197,13 +227,13 @@ class Sequential(Module):
             return self
 
     @_copy_to_script_wrapper
-    def __dir__(self):
+    def __dir__(self) -> str:
         keys = super().__dir__()
         keys = [key for key in keys if not key.isdigit()]
         return keys
 
     @_copy_to_script_wrapper
-    def __iter__(self) -> Iterator[Module]:
+    def __iter__(self) -> Iterator[M]:
         return iter(self._modules.values())
 
     # NB: We can't really type check this function as the type of input
@@ -215,7 +245,8 @@ class Sequential(Module):
             input = module(input)
         return input
 
-    def append(self, module: Module) -> 'Sequential':
+    @override  # MutableSequence returns None
+    def append(self, module: M) -> Self:
         r"""Appends a given module to the end.
 
         Args:
@@ -224,7 +255,8 @@ class Sequential(Module):
         self.add_module(str(len(self)), module)
         return self
 
-    def insert(self, index: int, module: Module) -> 'Sequential':
+    @override  # MutableSequence returns None
+    def insert(self, index: int, module: M) -> Self:
         if not isinstance(module, Module):
             raise AssertionError(
                 f'module should be of type: {Module}')
@@ -239,8 +271,9 @@ class Sequential(Module):
         self._modules[str(index)] = module
         return self
 
-    def extend(self, sequential) -> 'Sequential':
-        for layer in sequential:
+    @override  # MutableSequence returns None
+    def extend(self, modules: Iterable[M]) -> Self:
+        for layer in modules:
             self.append(layer)
         return self
 
@@ -595,7 +628,7 @@ class ParameterList(Module):
         ...
 
     @overload
-    def __getitem__(self: T, idx: slice) -> T:
+    def __getitem__(self, idx: slice) -> Self:
         ...
 
     def __getitem__(self, idx):
@@ -609,7 +642,7 @@ class ParameterList(Module):
             idx = self._get_abs_string_index(idx)
             return getattr(self, str(idx))
 
-    def __setitem__(self, idx: int, param: Any) -> None:
+    def __setitem__(self, idx: int, param: Union[P, torch.Tensor]) -> None:
         # Note that all other function that add an entry to the list part of
         # the ParameterList end up here. So this is the only place where we need
         # to wrap things into Parameter if needed.
