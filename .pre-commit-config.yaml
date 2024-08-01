@@ -1,0 +1,50 @@
+exclude: '(\.git/|\.venv/|\.idea/|\docs/_build/|bugs/)'
+minimum_pre_commit_version: 3.6.0
+default_language_version:
+  python: python3.12
+  node: "20.10.0"
+repos:
+  # personal hooks
+  - repo: https://github.com/randolf-scholz/assorted-hooks.git
+    rev: v0.3.4
+    hooks:
+#      # pygrep hooks
+#      - id: check-separator-length
+#      - id: pyarrow-timestamp-seconds
+#        exclude: 'dtypes.py'
+#      - id: python-consider-using-raw-string
+#      - id: python-no-blanket-type-ignore
+#      - id: python-no-builtin-eval
+#      - id: python-rename-axes-axis
+#      - id: python-system-exit
+#      - id: python-match-case-builtins
+      # ast-based hooks
+      - id: python-check-dunder-all
+#        files: '^torch/([^_]\w+/)*__init__.py'
+        files: '^torch/([^_]\w+/)*([^_]\w+\.py)'
+        args: ["--no-warn-location", "--no-warn-annotated"]
+
+#      - id: python-check-typing
+#        files: '^src/|tests/'
+#      - id: python-direct-imports
+#      - id: python-no-mixed-args
+#        files: '^src/'
+#        args:
+#          - "--ignore-names"
+#          - "forward"
+#          - "predict"
+#          - "--ignore-decorators"
+#          - "jit.script"
+#          - "torch.no_grad"
+#          - "--allow-two"
+#          - "--"
+#      - id: python-standard-generics
+#      # script-based hooks
+#      - id: pyproject-validate-version
+#      - id: pyproject-update-deps
+#      - id: pyproject-check-unmaintained
+#      - id: python-check-clean-interface
+#        files: 'src/'
+#      # other hooks
+#      - id: check-resolved-github-issues
+#        files: '^src/|^tests/'

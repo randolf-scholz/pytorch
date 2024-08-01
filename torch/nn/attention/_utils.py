@@ -1,12 +1,11 @@
 # mypy: allow-untyped-defs
+__all__: list[str] = []
+
 """Defines utilities for interacting with scaled_dot_product_attention"""
 import math
-from typing import List, Optional
+from typing import Optional
 
 import torch
-
-
-__all__: List[str] = []
 
 
 def _input_requires_grad(*tensors: torch.Tensor) -> bool:

@@ -1,4 +1,8 @@
 # mypy: allow-untyped-defs
+__all__ = [
+    "fake_quantize_function",
+]
+
 import torch
 from torch import Tensor
 from torch.ao.quantization.experimental.quantizer import dequantize_APoT, quantize_APoT

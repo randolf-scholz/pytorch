@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 # mypy: allow-untyped-defs
+__all__: list[str] = []
 
 import itertools
-from typing import List
 
 import torch
 from torch.autograd.profiler_legacy import profile
@@ -11,9 +11,6 @@ from . import (
     _disable_server_process_global_profiler,
     _enable_server_process_global_profiler,
 )
-
-
-__all__: List[str] = []
 
 
 class _server_process_global_profile(profile):

@@ -1,4 +1,9 @@
 # mypy: allow-untyped-defs
+__all__ = [
+    "convert_conv2d_weight_memory_format",
+    "convert_conv3d_weight_memory_format",
+]
+
 import torch
 
 

@@ -1,15 +1,25 @@
 # mypy: allow-untyped-defs
+__all__: list[str] = []
+
 import functools
 import time
+<<<<<<< Updated upstream
 from typing import Any, Callable, Dict, List, TypeVar
+=======
+from typing import Any, Callable, Dict, TypeVar
+
+>>>>>>> Stashed changes
 from typing_extensions import ParamSpec
 from uuid import uuid4
 
 import torch.distributed.c10d_logger as c10d_logger
 from torch.distributed.checkpoint.logging_handlers import DCP_LOGGER_NAME
 
+<<<<<<< Updated upstream
 
 __all__: List[str] = []
+=======
+>>>>>>> Stashed changes
 
 global _dcp_logger
 _dcp_logger = c10d_logger._get_or_create_logger(DCP_LOGGER_NAME)

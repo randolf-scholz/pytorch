@@ -1,4 +1,8 @@
 # mypy: allow-untyped-defs
+__all__ = [
+    "NearlyDiagonalSparsifier",
+]
+
 import torch
 
 from . import base_sparsifier

@@ -1,9 +1,9 @@
+__all__: list[str] = []
+
 from typing import Any, Dict, Iterable, List, no_type_check, Type
 
 import torch
 
-
-__all__: List[str] = []
 
 # WeakTensorKeyDictionary to store relevant meta-data for the Tensor/Parameter
 # without changing it's life-time.

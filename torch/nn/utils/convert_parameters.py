@@ -1,3 +1,8 @@
+__all__ = [
+    "parameters_to_vector",
+    "vector_to_parameters",
+]
+
 from typing import Iterable, Optional
 
 import torch

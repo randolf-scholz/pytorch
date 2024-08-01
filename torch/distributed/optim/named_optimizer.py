@@ -1,4 +1,6 @@
 # mypy: allow-untyped-defs
+__all__: list[str] = []
+
 import logging
 import warnings
 from copy import deepcopy
@@ -20,8 +22,6 @@ from torch import optim
 from torch.distributed._shard.sharded_tensor import ShardedTensor
 from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 
-
-__all__: List[str] = []
 
 logger = logging.getLogger(__name__)
 

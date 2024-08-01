@@ -3,6 +3,9 @@
 
 $ python -m examples.sparse.fuzzer
 """
+__all__ = [
+    "main",
+]
 
 import sys
 

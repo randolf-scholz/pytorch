@@ -1,4 +1,8 @@
 # mypy: allow-untyped-defs
+__all__: list[str] = [
+    "create_read_items_for_chunk_list",
+]
+
 from typing import Any, cast, List
 
 import torch
@@ -31,9 +35,6 @@ from .resharding import (
     _check_shard_metadata_pair_overlap,
     _shards_get_overlap_region_wrt_saved_tensor,
 )
-
-
-__all__: List[str] = ["create_read_items_for_chunk_list"]
 
 
 def _create_chunk_from_tensor(tensor: torch.Tensor) -> ChunkStorageMetadata:

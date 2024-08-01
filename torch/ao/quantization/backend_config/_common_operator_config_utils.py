@@ -1,4 +1,6 @@
 # mypy: allow-untyped-defs
+__all__: list[str] = []
+
 import copy
 import operator
 from collections import namedtuple
@@ -26,8 +28,6 @@ from .backend_config import (
     ObservationType,
 )
 
-
-__all__: List[str] = []
 
 # TODO: rename to be more explicit, e.g. qat_conv_relu
 _ConvMetadata = namedtuple(

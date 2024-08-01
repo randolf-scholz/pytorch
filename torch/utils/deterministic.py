@@ -1,4 +1,8 @@
 # mypy: allow-untyped-defs
+__all__: list[str] = [
+    "fill_uninitialized_memory",
+]
+
 import sys
 import types
 

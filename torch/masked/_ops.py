@@ -1,5 +1,7 @@
 # mypy: allow-untyped-decorators
 # mypy: allow-untyped-defs
+__all__: list[str] = []
+
 import warnings
 from typing import Any, List, Optional, Tuple, TYPE_CHECKING, Union
 
@@ -18,9 +20,6 @@ else:
     # The JIT doesn't understand Union, nor torch.dtype here
     DType = int
     DimOrDims = Optional[Tuple[int]]
-
-
-__all__: List[str] = []
 
 # All masked reduction/normalization operations have the same
 # signatures. Here we introduce docstring templates that are applied

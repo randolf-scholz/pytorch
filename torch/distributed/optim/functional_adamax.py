@@ -1,12 +1,11 @@
 # mypy: allow-untyped-defs
+__all__: list[str] = []
+
 from typing import Dict, List, Optional, Tuple
 
 import torch
 import torch.optim._functional as F
 from torch import Tensor
-
-
-__all__: List[str] = []
 
 
 # Define a TorchScript compatible Functional Adamax Optimizer

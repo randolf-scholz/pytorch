@@ -1,4 +1,8 @@
 # mypy: allow-untyped-defs
+__all__ = [
+    "AnnotateTypesWithSchema"
+]
+
 import torch
 import torch.fx
 import inspect
@@ -8,6 +12,7 @@ from torch._jit_internal import boolean_dispatched
 from torch.fx.operator_schemas import _torchscript_type_to_python_type
 
 from torch.fx import Transformer
+
 
 class AnnotateTypesWithSchema(Transformer):
     """

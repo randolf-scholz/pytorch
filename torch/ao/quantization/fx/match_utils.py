@@ -1,4 +1,6 @@
 # mypy: allow-untyped-defs
+__all__: list[str] = []
+
 import sys
 from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Type
 
@@ -11,8 +13,6 @@ from torch.nn.utils.parametrize import type_before_parametrizations
 from .graph_module import _is_observed_standalone_module
 from .quantize_handler import QuantizeHandler
 
-
-__all__: List[str] = []
 
 # TODO(future PR): the 1st argument is typed as `List[Node]`, but a better type
 # would be a recursive `List[Union[Node, Tuple[Union[Node, ...]]]]`

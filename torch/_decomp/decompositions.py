@@ -1,5 +1,7 @@
 # mypy: allow-untyped-decorators
 # mypy: allow-untyped-defs
+__all__: list[str] = []
+
 import functools
 import itertools
 import numbers
@@ -39,7 +41,6 @@ DispatchKey = torch._C.DispatchKey  # type: ignore[attr-defined]
 
 # None of these functions are publicly accessible; get at them
 # from torch._decomps
-__all__: List[str] = []
 
 aten = torch._ops.ops.aten
 

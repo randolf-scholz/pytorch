@@ -6,19 +6,18 @@
 #
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
+__all__: list[str] = []
 
 import functools
 import logging
 import time
-from typing import Any, Callable, Dict, List, Tuple, TypeVar
+from typing import Any, Callable, Dict, Tuple, TypeVar
 from typing_extensions import ParamSpec
 
 import torch
 import torch.distributed as dist
 from torch.distributed.logging_handlers import _log_handlers
 
-
-__all__: List[str] = []
 
 _DEFAULT_DESTINATION = "default"
 

@@ -1,10 +1,9 @@
 # mypy: allow-untyped-defs
+__all__: list[str] = []
+
 from typing import List, Tuple
 
 from torch.distributed.checkpoint.metadata import ChunkStorageMetadata
-
-
-__all__: List[str] = []
 
 
 def _check_shard_metadata_pair_overlap(

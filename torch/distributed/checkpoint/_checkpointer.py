@@ -1,5 +1,7 @@
+__all__: list[str] = []
+
 from concurrent.futures import Future
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import torch.distributed as dist
 import torch.distributed.checkpoint.state_dict_loader as loader
@@ -11,9 +13,6 @@ from torch.distributed.checkpoint.storage import (
     StorageReader,
     StorageWriter,
 )
-
-
-__all__: List[str] = []
 
 
 class _Checkpointer:

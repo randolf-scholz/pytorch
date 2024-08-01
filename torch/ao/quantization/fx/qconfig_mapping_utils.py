@@ -1,4 +1,6 @@
 # mypy: allow-untyped-defs
+__all__: list[str] = []
+
 import re
 from collections import defaultdict, OrderedDict
 from typing import Any, Callable, Dict, List, Set, Tuple, Union
@@ -23,9 +25,6 @@ from torch.ao.quantization.qconfig_mapping import (
 from torch.ao.quantization.utils import _parent_name, get_qconfig_dtypes
 from torch.fx import GraphModule
 from torch.fx.graph import Graph
-
-
-__all__: List[str] = []
 
 
 def _maybe_adjust_qconfig_for_module_name_object_type_order(

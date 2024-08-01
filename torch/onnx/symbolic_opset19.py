@@ -23,10 +23,8 @@ Scan
 Shape
 Size
 """
+__all__: list[str] = []
 
-from typing import List
 
 # EDITING THIS FILE? READ THIS FIRST!
 # see Note [Edit Symbolic Files] in symbolic_helper.py
-
-__all__: List[str] = []

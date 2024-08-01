@@ -5,12 +5,11 @@
 #
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
+__all__: list[str] = []
 
 import logging
-from typing import Dict, List
+from typing import Dict
 
-
-__all__: List[str] = []
 
 _log_handlers: Dict[str, logging.Handler] = {
     "default": logging.NullHandler(),

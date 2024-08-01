@@ -5,14 +5,12 @@
 #
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
+__all__: list[str] = []
 
 import logging
-from typing import List, Tuple
+from typing import Tuple
 
 from torch.distributed._shard.sharded_tensor.logging_handlers import _log_handlers
-
-
-__all__: List[str] = []
 
 
 def _get_or_create_logger() -> logging.Logger:

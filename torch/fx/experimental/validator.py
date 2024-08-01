@@ -1,4 +1,11 @@
 # mypy: allow-untyped-defs
+__all__ = [
+    "BisectValidationException",
+    "ValidationException",
+    "translation_validation_enabled",
+    "translation_validation_timeout",
+]
+
 import functools
 import logging
 import math
@@ -573,19 +580,12 @@ try:
 except ImportError:
     _HAS_Z3 = False
 
-    __all__ = [
-        "translation_validation_enabled", "translation_validation_timeout",
-        "ValidationException", "BisectValidationException",
-    ]
-
 else:
     _HAS_Z3 = True
 
-    __all__ = [
+    __all__.extend([
         "z3str", "z3op", "PopulateValidator", "SympyToZ3", "TranslationValidator",
-        "translation_validation_enabled", "translation_validation_timeout",
-        "ValidationException", "BisectValidationException",
-    ]
+    ])
 
 from torch.fx.experimental import _config as config
 
