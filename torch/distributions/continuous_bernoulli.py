@@ -1,7 +1,7 @@
 ## mypy: allow-untyped-defs
 import math
 from numbers import Number
-from typing import Any, Optional
+from typing import Any, Optional, Union
 from typing_extensions import Self
 
 import torch
@@ -55,8 +55,8 @@ class ContinuousBernoulli(ExponentialFamily):
 
     def __init__(
         self,
-        probs: Optional[Tensor | Number] = None,
-        logits: Optional[Tensor | Number] = None,
+        probs: Optional[Union[Tensor, Number]] = None,
+        logits: Optional[Union[Tensor, Number]] = None,
         lims: tuple[float, float] = (0.499, 0.501),
         validate_args: Optional[bool] = None,
     ) -> None:

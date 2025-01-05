@@ -1,5 +1,5 @@
 ## mypy: allow-untyped-defs
-from typing import Optional
+from typing import Optional, Union
 from typing_extensions import Self
 
 from torch import Tensor
@@ -34,8 +34,8 @@ class Pareto(TransformedDistribution):
 
     def __init__(
         self,
-        scale: float | Tensor,
-        alpha: float | Tensor,
+        scale: Union[Tensor, float],
+        alpha: Union[Tensor, float],
         validate_args: Optional[bool] = None,
     ) -> None:
         self.scale, self.alpha = broadcast_all(scale, alpha)

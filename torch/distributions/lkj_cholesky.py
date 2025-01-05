@@ -9,7 +9,7 @@ Original copyright notice:
 """
 
 import math
-from typing import Optional
+from typing import Optional, Union
 from typing_extensions import Self
 
 import torch
@@ -67,7 +67,7 @@ class LKJCholesky(Distribution):
     def __init__(
         self,
         dim: int,
-        concentration: float | Tensor = 1.0,
+        concentration: Union[Tensor, float] = 1.0,
         validate_args: Optional[bool] = None,
     ) -> None:
         if dim < 2:

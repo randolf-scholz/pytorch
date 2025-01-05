@@ -1,7 +1,7 @@
 ## mypy: allow-untyped-defs
 import math
 from numbers import Number, Real
-from typing import Optional
+from typing import Optional, Union
 from typing_extensions import Self
 
 import torch
@@ -55,8 +55,8 @@ class Normal(ExponentialFamily):
 
     def __init__(
         self,
-        loc: float | Tensor,
-        scale: float | Tensor,
+        loc: Union[Tensor, float],
+        scale: Union[Tensor, float],
         validate_args: Optional[bool] = None,
     ) -> None:
         self.loc, self.scale = broadcast_all(loc, scale)

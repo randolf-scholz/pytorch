@@ -1,5 +1,5 @@
 ## mypy: allow-untyped-defs
-from typing import Optional
+from typing import Optional, Union
 from typing_extensions import Self
 
 from torch import Tensor
@@ -39,8 +39,8 @@ class LogNormal(TransformedDistribution):
 
     def __init__(
         self,
-        loc: float | Tensor,
-        scale: float | Tensor,
+        loc: Union[Tensor, float],
+        scale: Union[Tensor, float],
         validate_args: Optional[bool] = None,
     ) -> None:
         base_dist = Normal(loc, scale, validate_args=validate_args)

@@ -1,5 +1,5 @@
 ## mypy: allow-untyped-defs
-from typing import Optional
+from typing import Optional, Union
 from typing_extensions import Self
 
 import torch
@@ -45,8 +45,8 @@ class InverseGamma(TransformedDistribution):
 
     def __init__(
         self,
-        concentration: float | Tensor,
-        rate: float | Tensor,
+        concentration: Union[Tensor, float],
+        rate: Union[Tensor, float],
         validate_args: Optional[bool] = None,
     ) -> None:
         base_dist = Gamma(concentration, rate, validate_args=validate_args)

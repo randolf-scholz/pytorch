@@ -1,6 +1,6 @@
 ## mypy: allow-untyped-defs
 from numbers import Number
-from typing import Optional
+from typing import Optional, Union
 from typing_extensions import Self
 
 import torch
@@ -51,7 +51,7 @@ class Exponential(ExponentialFamily):
 
     def __init__(
         self,
-        rate: float | Tensor,
+        rate: Union[Tensor, float],
         validate_args: Optional[bool] = None,
     ) -> None:
         (self.rate,) = broadcast_all(rate)
