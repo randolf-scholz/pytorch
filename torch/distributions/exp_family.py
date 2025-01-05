@@ -1,3 +1,5 @@
+from typing import Any
+
 import torch
 from torch import Tensor
 from torch.distributions.distribution import Distribution
@@ -35,7 +37,9 @@ class ExponentialFamily(Distribution):
         """
         raise NotImplementedError
 
-    def _log_normalizer(self, *natural_params) -> Tensor:
+    # FIXME: This definition causes LSP violations, since subclasses implement without *args.
+    #   Better: define as a single argument natural_params: tuple[Tensor, ...].
+    def _log_normalizer(self, *natural_params: Any) -> Tensor:
         """
         Abstract method for log normalizer function. Returns a log normalizer based on
         the distribution and input
