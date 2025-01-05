@@ -89,7 +89,7 @@ class Independent(Distribution):
     @constraints.dependent_property
     def support(self) -> Optional[Constraint]:
         result = self.base_dist.support
-        if self.reinterpreted_batch_ndims:
+        if self.reinterpreted_batch_ndims and result is not None:
             result = constraints.independent(result, self.reinterpreted_batch_ndims)
         return result
 
