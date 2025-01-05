@@ -3,7 +3,7 @@ from typing import Optional
 from typing_extensions import Self
 
 import torch
-from torch import Tensor
+from torch import Size, Tensor
 from torch.distributions import constraints
 from torch.distributions.distribution import Distribution
 from torch.distributions.utils import _standard_normal, lazy_property
@@ -46,10 +46,10 @@ def _batch_mahalanobis(bL: Tensor, bx: Tensor) -> Tensor:
     old_batch_dims = outer_batch_dims + bL_batch_dims
     new_batch_dims = outer_batch_dims + 2 * bL_batch_dims
     # Reshape bx with the shape (..., 1, i, j, 1, n)
-    bx_new_shape = bx.shape[:outer_batch_dims]
+    bx_new_shape: Size = bx.shape[:outer_batch_dims]
     for sL, sx in zip(bL.shape[:-2], bx.shape[outer_batch_dims:-1]):
-        bx_new_shape += (sx // sL, sL)
-    bx_new_shape += (n,)
+        bx_new_shape += (sx // sL, sL)  # type: ignore[assignment]
+    bx_new_shape += (n,)  # type: ignore[assignment]
     bx = bx.reshape(bx_new_shape)
     # Permute bx to make it have shape (..., 1, j, i, 1, n)
     permute_dims = (
