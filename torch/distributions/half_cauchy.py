@@ -1,4 +1,3 @@
-## mypy: allow-untyped-defs
 import math
 from typing import Optional, Union
 from typing_extensions import Self
