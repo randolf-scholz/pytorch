@@ -180,8 +180,8 @@ def is_dependent(constraint) -> TypeIs[_Dependent]:
     return isinstance(constraint, _Dependent)
 
 
-T = TypeVar("T")
-R = TypeVar("R")
+T = TypeVar("T", covariant=True)
+R = TypeVar("R", covariant=True)
 
 
 class _DependentProperty(property, _Dependent, Generic[T, R]):
@@ -216,11 +216,14 @@ class _DependentProperty(property, _Dependent, Generic[T, R]):
         is_discrete: bool = NotImplemented,
         event_dim: int = NotImplemented,
     ) -> None:
-        super().__init__(fn)
-        self._is_discrete = is_discrete
-        self._event_dim = event_dim
+        property.__init__(self, fn)
+        _Dependent.__init__(self, is_discrete=is_discrete, event_dim=event_dim)
 
-    def __call__(self, fn: Callable[[T], R]) -> "_DependentProperty[T, R]":  # type: ignore[override]
+    _T2 = TypeVar("_T2", covariant=True)
+    _R2 = TypeVar("_R2", covariant=True)
+
+    # polymorphic decorator
+    def __call__(self, fn: Callable[[_T2], _R2]) -> "_DependentProperty[_T2, _R2]":  # type: ignore[override]
         """
         Support for syntax to customize static attributes::
 
