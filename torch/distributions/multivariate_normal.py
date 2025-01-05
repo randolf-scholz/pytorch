@@ -189,7 +189,7 @@ class MultivariateNormal(Distribution):
             self._unbroadcasted_scale_tril = scale_tril
         elif covariance_matrix is not None:
             self._unbroadcasted_scale_tril = torch.linalg.cholesky(covariance_matrix)
-        else:  # precision_matrix is not None
+        elif precision_matrix is not None:
             self._unbroadcasted_scale_tril = _precision_to_scale_tril(precision_matrix)
 
     def expand(self, batch_shape: _size, _instance: Optional[Self] = None) -> Self:

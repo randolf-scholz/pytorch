@@ -138,7 +138,7 @@ class _Dependent(Constraint):
 
     def __call__(
         self, *, is_discrete: bool = NotImplemented, event_dim: int = NotImplemented
-    ):
+    ) -> "_Dependent":
         """
         Support for syntax to customize static attributes::
 

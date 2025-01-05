@@ -1,10 +1,10 @@
-from typing import Optional
+from typing import Any, Optional
 from typing_extensions import Self
 
 import torch
 from torch import Tensor
 from torch.autograd import Function
-from torch.autograd.function import FunctionCtx, once_differentiable
+from torch.autograd.function import once_differentiable
 from torch.distributions import constraints
 from torch.distributions.exp_family import ExponentialFamily
 from torch.types import _size
@@ -24,14 +24,14 @@ def _Dirichlet_backward(
 
 class _Dirichlet(Function):
     @staticmethod
-    def forward(ctx: FunctionCtx, concentration: Tensor) -> Tensor:
+    def forward(ctx: Any, concentration: Tensor) -> Tensor:
         x = torch._sample_dirichlet(concentration)
         ctx.save_for_backward(x, concentration)
         return x
 
     @staticmethod
     @once_differentiable  # type: ignore[misc]
-    def backward(ctx: FunctionCtx, grad_output: Tensor) -> Tensor:
+    def backward(ctx: Any, grad_output: Tensor) -> Tensor:
         x, concentration = ctx.saved_tensors
         return _Dirichlet_backward(x, concentration, grad_output)
 
