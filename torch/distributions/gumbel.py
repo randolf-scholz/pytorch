@@ -32,7 +32,7 @@ class Gumbel(TransformedDistribution):
         scale (float or Tensor): Scale parameter of the distribution
     """
     arg_constraints = {"loc": constraints.real, "scale": constraints.positive}
-    support = constraints.real
+    support = constraints.real  # type: ignore[assignment]
 
     def __init__(
         self,

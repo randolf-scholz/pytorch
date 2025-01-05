@@ -34,7 +34,7 @@ class Weibull(TransformedDistribution):
         "scale": constraints.positive,
         "concentration": constraints.positive,
     }
-    support = constraints.positive
+    support = constraints.positive  # type: ignore[assignment]
 
     def __init__(
         self,

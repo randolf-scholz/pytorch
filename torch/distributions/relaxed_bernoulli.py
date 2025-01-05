@@ -136,7 +136,7 @@ class RelaxedBernoulli(TransformedDistribution):
         logits (Number, Tensor): the log-odds of sampling `1`
     """
     arg_constraints = {"probs": constraints.unit_interval, "logits": constraints.real}
-    support = constraints.unit_interval
+    support = constraints.unit_interval  # type: ignore[assignment]
     has_rsample = True
     base_dist: LogitRelaxedBernoulli
 

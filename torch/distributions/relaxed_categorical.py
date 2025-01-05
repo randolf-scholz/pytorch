@@ -125,7 +125,7 @@ class RelaxedOneHotCategorical(TransformedDistribution):
         logits (Tensor): unnormalized log probability for each event
     """
     arg_constraints = {"probs": constraints.simplex, "logits": constraints.real_vector}
-    support = constraints.simplex
+    support = constraints.simplex  # type: ignore[assignment]
     has_rsample = True
     base_dist: ExpRelaxedCategorical
 

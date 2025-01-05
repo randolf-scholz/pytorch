@@ -36,7 +36,7 @@ class LogisticNormal(TransformedDistribution):
 
     """
     arg_constraints = {"loc": constraints.real, "scale": constraints.positive}
-    support = constraints.simplex
+    support = constraints.simplex  # type: ignore[assignment]
     has_rsample = True
     base_dist: Normal
 

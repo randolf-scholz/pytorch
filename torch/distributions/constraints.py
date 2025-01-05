@@ -1,4 +1,3 @@
-# mypy: allow-untyped-defs
 r"""
 The following constraints are implemented:
 
@@ -154,7 +153,7 @@ class _Dependent(Constraint):
         raise ValueError("Cannot determine validity of dependent constraint")
 
 
-def is_dependent(constraint) -> TypeIs[_Dependent]:
+def is_dependent(constraint: Constraint) -> TypeIs[_Dependent]:
     """
     Checks if ``constraint`` is a ``_Dependent`` object.
 
@@ -180,7 +179,7 @@ def is_dependent(constraint) -> TypeIs[_Dependent]:
     return isinstance(constraint, _Dependent)
 
 
-T = TypeVar("T", covariant=True)
+T = TypeVar("T", contravariant=True)
 R = TypeVar("R", covariant=True)
 
 
@@ -219,7 +218,7 @@ class _DependentProperty(property, _Dependent, Generic[T, R]):
         property.__init__(self, fn)
         _Dependent.__init__(self, is_discrete=is_discrete, event_dim=event_dim)
 
-    _T2 = TypeVar("_T2", covariant=True)
+    _T2 = TypeVar("_T2", contravariant=True)
     _R2 = TypeVar("_R2", covariant=True)
 
     # polymorphic decorator
@@ -500,7 +499,7 @@ class _Multinomial(Constraint):
     def __init__(self, upper_bound: int) -> None:
         self.upper_bound = upper_bound
 
-    def check(self, x):
+    def check(self, x: Tensor) -> Tensor:
         return (x >= 0).all(dim=-1) & (x.sum(dim=-1) <= self.upper_bound)
 
 

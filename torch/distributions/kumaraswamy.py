@@ -44,7 +44,7 @@ class Kumaraswamy(TransformedDistribution):
         "concentration1": constraints.positive,
         "concentration0": constraints.positive,
     }
-    support = constraints.unit_interval
+    support = constraints.unit_interval  # type: ignore[assignment]
     has_rsample = True
 
     def __init__(
