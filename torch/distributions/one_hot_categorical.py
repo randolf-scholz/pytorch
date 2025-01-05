@@ -1,5 +1,5 @@
 ## mypy: allow-untyped-defs
-from typing import Optional, Any
+from typing import Any, Optional
 from typing_extensions import Self
 
 import torch
