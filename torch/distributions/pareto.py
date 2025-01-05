@@ -1,12 +1,15 @@
-# mypy: allow-untyped-defs
+## mypy: allow-untyped-defs
 from typing import Optional
+from typing_extensions import Self
 
 from torch import Tensor
 from torch.distributions import constraints
+from torch.distributions.constraints import Constraint
 from torch.distributions.exponential import Exponential
 from torch.distributions.transformed_distribution import TransformedDistribution
 from torch.distributions.transforms import AffineTransform, ExpTransform
 from torch.distributions.utils import broadcast_all
+from torch.types import _size
 
 
 __all__ = ["Pareto"]
@@ -40,7 +43,7 @@ class Pareto(TransformedDistribution):
         transforms = [ExpTransform(), AffineTransform(loc=0, scale=self.scale)]
         super().__init__(base_dist, transforms, validate_args=validate_args)
 
-    def expand(self, batch_shape, _instance=None):
+    def expand(self, batch_shape: _size, _instance: Optional[Self] = None) -> Self:
         new = self._get_checked_instance(Pareto, _instance)
         new.scale = self.scale.expand(batch_shape)
         new.alpha = self.alpha.expand(batch_shape)
@@ -63,8 +66,8 @@ class Pareto(TransformedDistribution):
         return self.scale.pow(2) * a / ((a - 1).pow(2) * (a - 2))
 
     @constraints.dependent_property(is_discrete=False, event_dim=0)
-    def support(self):
+    def support(self) -> Constraint:
         return constraints.greater_than_eq(self.scale)
 
-    def entropy(self):
+    def entropy(self) -> Tensor:
         return (self.scale / self.alpha).log() + (1 + self.alpha.reciprocal())

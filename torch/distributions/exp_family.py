@@ -1,4 +1,4 @@
-# mypy: allow-untyped-defs
+## mypy: allow-untyped-defs
 import torch
 from torch import Tensor
 from torch.distributions.distribution import Distribution
@@ -36,7 +36,7 @@ class ExponentialFamily(Distribution):
         """
         raise NotImplementedError
 
-    def _log_normalizer(self, *natural_params):
+    def _log_normalizer(self, *natural_params) -> Tensor:
         """
         Abstract method for log normalizer function. Returns a log normalizer based on
         the distribution and input
@@ -51,7 +51,7 @@ class ExponentialFamily(Distribution):
         """
         raise NotImplementedError
 
-    def entropy(self):
+    def entropy(self) -> Tensor:
         """
         Method to compute the entropy using Bregman divergence of the log normalizer.
         """

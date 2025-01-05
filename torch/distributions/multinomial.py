@@ -1,12 +1,15 @@
-# mypy: allow-untyped-defs
-from typing import Optional
+## mypy: allow-untyped-defs
+from typing import Any, Optional
+from typing_extensions import Self
 
 import torch
 from torch import inf, Tensor
 from torch.distributions import Categorical, constraints
 from torch.distributions.binomial import Binomial
+from torch.distributions.constraints import Constraint
 from torch.distributions.distribution import Distribution
 from torch.distributions.utils import broadcast_all
+from torch.types import _size
 
 
 __all__ = ["Multinomial"]
@@ -76,7 +79,7 @@ class Multinomial(Distribution):
         event_shape = self._categorical.param_shape[-1:]
         super().__init__(batch_shape, event_shape, validate_args=validate_args)
 
-    def expand(self, batch_shape, _instance=None):
+    def expand(self, batch_shape: _size, _instance: Optional[Self] = None) -> Self:
         new = self._get_checked_instance(Multinomial, _instance)
         batch_shape = torch.Size(batch_shape)
         new.total_count = self.total_count
@@ -87,11 +90,11 @@ class Multinomial(Distribution):
         new._validate_args = self._validate_args
         return new
 
-    def _new(self, *args, **kwargs):
+    def _new(self, *args: Any, **kwargs: Any) -> Tensor:
         return self._categorical._new(*args, **kwargs)
 
     @constraints.dependent_property(is_discrete=True, event_dim=1)
-    def support(self):
+    def support(self) -> Constraint:
         return constraints.multinomial(self.total_count)
 
     @property
@@ -106,7 +109,7 @@ class Multinomial(Distribution):
     def param_shape(self) -> torch.Size:
         return self._categorical.param_shape
 
-    def sample(self, sample_shape=torch.Size()):
+    def sample(self, sample_shape: _size = torch.Size()) -> Tensor:
         sample_shape = torch.Size(sample_shape)
         samples = self._categorical.sample(
             torch.Size((self.total_count,)) + sample_shape
@@ -120,7 +123,7 @@ class Multinomial(Distribution):
         counts.scatter_add_(-1, samples, torch.ones_like(samples))
         return counts.type_as(self.probs)
 
-    def entropy(self):
+    def entropy(self) -> Tensor:
         n = torch.tensor(self.total_count)
 
         cat_entropy = self._categorical.entropy()
@@ -133,7 +136,7 @@ class Multinomial(Distribution):
 
         return term1 + term2
 
-    def log_prob(self, value):
+    def log_prob(self, value: Tensor) -> Tensor:
         if self._validate_args:
             self._validate_sample(value)
         logits, value = broadcast_all(self.logits, value)
