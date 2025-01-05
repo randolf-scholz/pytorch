@@ -326,7 +326,7 @@ class Distribution:
     def _get_checked_instance(
         self, cls: type, _instance: Optional[Self] = None
     ) -> Self:
-        if _instance is None and type(self).__init__ != cls.__init__:
+        if _instance is None and type(self).__init__ != cls.__init__:  # type: ignore[misc]
             raise NotImplementedError(
                 f"Subclass {self.__class__.__name__} of {cls.__name__} that defines a custom __init__ method "
                 "must also define a custom .expand() method."

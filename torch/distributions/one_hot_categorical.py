@@ -1,5 +1,5 @@
 ## mypy: allow-untyped-defs
-from typing import Optional
+from typing import Optional, Any
 from typing_extensions import Self
 
 import torch
@@ -67,7 +67,7 @@ class OneHotCategorical(Distribution):
         new._validate_args = self._validate_args
         return new
 
-    def _new(self, *args, **kwargs):
+    def _new(self, *args: Any, **kwargs: Any) -> Tensor:
         return self._categorical._new(*args, **kwargs)
 
     @property

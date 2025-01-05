@@ -83,5 +83,5 @@ class Poisson(ExponentialFamily):
     def _natural_params(self) -> tuple[Tensor]:
         return (torch.log(self.rate),)
 
-    def _log_normalizer(self, x):
+    def _log_normalizer(self, x: Tensor) -> Tensor:
         return torch.exp(x)
