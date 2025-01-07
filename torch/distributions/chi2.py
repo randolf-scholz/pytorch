@@ -3,6 +3,7 @@ from typing_extensions import Self
 
 from torch import Tensor
 from torch.distributions import constraints
+from torch.distributions.constraints import Constraint
 from torch.distributions.gamma import Gamma
 from torch.types import _size
 
@@ -25,7 +26,7 @@ class Chi2(Gamma):
     Args:
         df (float or Tensor): shape parameter of the distribution
     """
-    arg_constraints = {"df": constraints.positive}
+    arg_constraints: dict[str, Constraint] = {"df": constraints.positive}
 
     def __init__(
         self,

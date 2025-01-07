@@ -4,6 +4,7 @@ from typing_extensions import Self
 import torch
 from torch import Tensor
 from torch.distributions import constraints
+from torch.distributions.constraints import Constraint
 from torch.distributions.exponential import Exponential
 from torch.distributions.gumbel import euler_constant
 from torch.distributions.transformed_distribution import TransformedDistribution
@@ -30,7 +31,7 @@ class Weibull(TransformedDistribution):
         scale (float or Tensor): Scale parameter of distribution (lambda).
         concentration (float or Tensor): Concentration parameter of distribution (k/shape).
     """
-    arg_constraints = {
+    arg_constraints: dict[str, Constraint] = {
         "scale": constraints.positive,
         "concentration": constraints.positive,
     }

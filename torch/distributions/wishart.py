@@ -1,12 +1,13 @@
 import math
 import warnings
 from numbers import Number
-from typing import Optional, Union
+from typing import Optional, Union, Final
 from typing_extensions import Self
 
 import torch
 from torch import nan, Tensor
 from torch.distributions import constraints
+from torch.distributions.constraints import Constraint
 from torch.distributions.exp_family import ExponentialFamily
 from torch.distributions.multivariate_normal import _precision_to_scale_tril
 from torch.distributions.utils import lazy_property
@@ -15,7 +16,7 @@ from torch.types import _size
 
 __all__ = ["Wishart"]
 
-_log_2 = math.log(2)
+_log_2: Final[float] = math.log(2)
 
 
 def _mvdigamma(x: Tensor, p: int) -> Tensor:
@@ -64,15 +65,15 @@ class Wishart(ExponentialFamily):
     [4] Odell, P. L. & Feiveson, A. H., 1966. `A Numerical Procedure to Generate a SampleCovariance Matrix`. JASA, 61(313):199-203.
     [5] Ku, Y.-C. & Bloomfield, P., 2010. `Generating Random Wishart Matrices with Fractional Degrees of Freedom in OX`.
     """
-    arg_constraints = {
+    arg_constraints: dict[str, Constraint] = {
         "covariance_matrix": constraints.positive_definite,
         "precision_matrix": constraints.positive_definite,
         "scale_tril": constraints.lower_cholesky,
         "df": constraints.greater_than(0),
     }
     support = constraints.positive_definite
-    has_rsample = True
-    _mean_carrier_measure = 0
+    has_rsample: bool = True
+    _mean_carrier_measure: float = 0
 
     def __init__(
         self,

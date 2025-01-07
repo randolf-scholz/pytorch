@@ -46,12 +46,12 @@ class Binomial(Distribution):
         probs (Tensor): Event probabilities
         logits (Tensor): Event log-odds
     """
-    arg_constraints = {
+    arg_constraints: dict[str, Constraint] = {
         "total_count": constraints.nonnegative_integer,
         "probs": constraints.unit_interval,
         "logits": constraints.real,
     }
-    has_enumerate_support = True
+    has_enumerate_support: bool = True
 
     def __init__(
         self,

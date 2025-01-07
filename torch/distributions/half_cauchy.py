@@ -6,6 +6,7 @@ import torch
 from torch import inf, Tensor
 from torch.distributions import constraints
 from torch.distributions.cauchy import Cauchy
+from torch.distributions.constraints import Constraint
 from torch.distributions.transformed_distribution import TransformedDistribution
 from torch.distributions.transforms import AbsTransform
 from torch.types import _size
@@ -31,9 +32,9 @@ class HalfCauchy(TransformedDistribution):
     Args:
         scale (float or Tensor): scale of the full Cauchy distribution
     """
-    arg_constraints = {"scale": constraints.positive}
+    arg_constraints: dict[str, Constraint] = {"scale": constraints.positive}
     support = constraints.nonnegative  # type: ignore[assignment]
-    has_rsample = True
+    has_rsample: bool = True
     base_dist: Cauchy
 
     def __init__(

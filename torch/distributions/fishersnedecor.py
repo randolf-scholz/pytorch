@@ -5,6 +5,7 @@ from typing_extensions import Self
 import torch
 from torch import nan, Tensor
 from torch.distributions import constraints
+from torch.distributions.constraints import Constraint
 from torch.distributions.distribution import Distribution
 from torch.distributions.gamma import Gamma
 from torch.distributions.utils import broadcast_all
@@ -29,9 +30,12 @@ class FisherSnedecor(Distribution):
         df1 (float or Tensor): degrees of freedom parameter 1
         df2 (float or Tensor): degrees of freedom parameter 2
     """
-    arg_constraints = {"df1": constraints.positive, "df2": constraints.positive}
+    arg_constraints: dict[str, Constraint] = {
+        "df1": constraints.positive,
+        "df2": constraints.positive,
+    }
     support = constraints.positive
-    has_rsample = True
+    has_rsample: bool = True
 
     def __init__(
         self,

@@ -5,6 +5,7 @@ from typing_extensions import Self
 import torch
 from torch import Tensor
 from torch.distributions import constraints
+from torch.distributions.constraints import Constraint
 from torch.distributions.distribution import Distribution
 from torch.distributions.transformed_distribution import TransformedDistribution
 from torch.distributions.transforms import SigmoidTransform
@@ -40,7 +41,10 @@ class LogitRelaxedBernoulli(Distribution):
     [2] Categorical Reparametrization with Gumbel-Softmax
     (Jang et al., 2017)
     """
-    arg_constraints = {"probs": constraints.unit_interval, "logits": constraints.real}
+    arg_constraints: dict[str, Constraint] = {
+        "probs": constraints.unit_interval,
+        "logits": constraints.real,
+    }
     support = constraints.real
 
     def __init__(
@@ -135,9 +139,12 @@ class RelaxedBernoulli(TransformedDistribution):
         probs (Number, Tensor): the probability of sampling `1`
         logits (Number, Tensor): the log-odds of sampling `1`
     """
-    arg_constraints = {"probs": constraints.unit_interval, "logits": constraints.real}
+    arg_constraints: dict[str, Constraint] = {
+        "probs": constraints.unit_interval,
+        "logits": constraints.real,
+    }
     support = constraints.unit_interval  # type: ignore[assignment]
-    has_rsample = True
+    has_rsample: bool = True
     base_dist: LogitRelaxedBernoulli
 
     def __init__(

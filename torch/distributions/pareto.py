@@ -29,7 +29,10 @@ class Pareto(TransformedDistribution):
         scale (float or Tensor): Scale parameter of the distribution
         alpha (float or Tensor): Shape parameter of the distribution
     """
-    arg_constraints = {"alpha": constraints.positive, "scale": constraints.positive}
+    arg_constraints: dict[str, Constraint] = {
+        "alpha": constraints.positive,
+        "scale": constraints.positive,
+    }
 
     def __init__(
         self,

@@ -51,7 +51,10 @@ class Multinomial(Distribution):
         probs (Tensor): event probabilities
         logits (Tensor): event log probabilities (unnormalized)
     """
-    arg_constraints = {"probs": constraints.simplex, "logits": constraints.real_vector}
+    arg_constraints: dict[str, Constraint] = {
+        "probs": constraints.simplex,
+        "logits": constraints.real_vector,
+    }
     total_count: int
 
     @property

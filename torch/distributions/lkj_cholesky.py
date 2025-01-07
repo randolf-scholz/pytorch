@@ -14,6 +14,7 @@ from typing_extensions import Self
 import torch
 from torch import Tensor
 from torch.distributions import Beta, constraints
+from torch.distributions.constraints import Constraint
 from torch.distributions.distribution import Distribution
 from torch.distributions.utils import broadcast_all
 from torch.types import _size
@@ -60,7 +61,7 @@ class LKJCholesky(Distribution):
     Daniel Lewandowski, Dorota Kurowicka, Harry Joe.
     Journal of Multivariate Analysis. 100. 10.1016/j.jmva.2009.04.008
     """
-    arg_constraints = {"concentration": constraints.positive}
+    arg_constraints: dict[str, Constraint] = {"concentration": constraints.positive}
     support = constraints.corr_cholesky
 
     def __init__(

@@ -92,7 +92,7 @@ class Transform:
             increasing or decreasing.
     """
 
-    bijective = False
+    bijective: bool = False
     domain: Constraint
     codomain: Constraint
     _cached_x_y: tuple[Optional[Tensor], Optional[Tensor]]
@@ -496,7 +496,7 @@ class ReshapeTransform(Transform):
             the latest single value is cached. Only 0 and 1 are supported.
     """
 
-    bijective = True
+    bijective: bool = True
 
     def __init__(
         self,
@@ -562,8 +562,8 @@ class ExpTransform(Transform):
     """
     domain = constraints.real
     codomain = constraints.positive
-    bijective = True
-    sign = +1
+    bijective: bool = True
+    sign: int = +1
 
     def __eq__(self, other: object) -> bool:
         return isinstance(other, ExpTransform)
@@ -584,7 +584,7 @@ class PowerTransform(Transform):
     """
     domain = constraints.positive
     codomain = constraints.positive
-    bijective = True
+    bijective: bool = True
 
     def __init__(self, exponent: Tensor, cache_size: int = 0) -> None:
         super().__init__(cache_size=cache_size)
@@ -631,8 +631,8 @@ class SigmoidTransform(Transform):
     """
     domain = constraints.real
     codomain = constraints.unit_interval
-    bijective = True
-    sign = +1
+    bijective: bool = True
+    sign: int = +1
 
     def __eq__(self, other: object) -> bool:
         return isinstance(other, SigmoidTransform)
@@ -656,8 +656,8 @@ class SoftplusTransform(Transform):
     """
     domain = constraints.real
     codomain = constraints.positive
-    bijective = True
-    sign = +1
+    bijective: bool = True
+    sign: int = +1
 
     def __eq__(self, other: object) -> bool:
         return isinstance(other, SoftplusTransform)
@@ -688,8 +688,8 @@ class TanhTransform(Transform):
     """
     domain = constraints.real
     codomain = constraints.interval(-1.0, 1.0)
-    bijective = True
-    sign = +1
+    bijective: bool = True
+    sign: int = +1
 
     def __eq__(self, other: object) -> bool:
         return isinstance(other, TanhTransform)
@@ -736,7 +736,7 @@ class AffineTransform(Transform):
             for univariate random variables, 1 for distributions over vectors,
             2 for distributions over matrices, etc.
     """
-    bijective = True
+    bijective: bool = True
 
     def __init__(
         self,
@@ -851,7 +851,7 @@ class CorrCholeskyTransform(Transform):
     """
     domain = constraints.real_vector
     codomain = constraints.corr_cholesky
-    bijective = True
+    bijective: bool = True
 
     def _call(self, x: Tensor) -> Tensor:
         x = torch.tanh(x)
@@ -968,7 +968,7 @@ class StickBreakingTransform(Transform):
 
     domain = constraints.real_vector
     codomain = constraints.simplex
-    bijective = True
+    bijective: bool = True
 
     def __eq__(self, other: object) -> bool:
         return isinstance(other, StickBreakingTransform)
@@ -1256,9 +1256,9 @@ class CumulativeDistributionTransform(Transform):
         copula = TransformedDistribution(base_dist, [transform])
     """
 
-    bijective = True
+    bijective: bool = True
     codomain = constraints.unit_interval
-    sign = +1
+    sign: int = +1
 
     def __init__(self, distribution: Distribution, cache_size: int = 0) -> None:
         super().__init__(cache_size=cache_size)

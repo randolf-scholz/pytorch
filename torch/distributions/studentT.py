@@ -5,6 +5,7 @@ from typing_extensions import Self
 import torch
 from torch import inf, nan, Tensor
 from torch.distributions import Chi2, constraints
+from torch.distributions.constraints import Constraint
 from torch.distributions.distribution import Distribution
 from torch.distributions.utils import _standard_normal, broadcast_all
 from torch.types import _size
@@ -30,13 +31,13 @@ class StudentT(Distribution):
         loc (float or Tensor): mean of the distribution
         scale (float or Tensor): scale of the distribution
     """
-    arg_constraints = {
+    arg_constraints: dict[str, Constraint] = {
         "df": constraints.positive,
         "loc": constraints.real,
         "scale": constraints.positive,
     }
     support = constraints.real
-    has_rsample = True
+    has_rsample: bool = True
 
     @property
     def mean(self) -> Tensor:

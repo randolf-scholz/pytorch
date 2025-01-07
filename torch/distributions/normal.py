@@ -6,6 +6,7 @@ from typing_extensions import Self
 import torch
 from torch import Tensor
 from torch.distributions import constraints
+from torch.distributions.constraints import Constraint
 from torch.distributions.exp_family import ExponentialFamily
 from torch.distributions.utils import _standard_normal, broadcast_all
 from torch.types import _size
@@ -31,10 +32,13 @@ class Normal(ExponentialFamily):
         scale (float or Tensor): standard deviation of the distribution
             (often referred to as sigma)
     """
-    arg_constraints = {"loc": constraints.real, "scale": constraints.positive}
+    arg_constraints: dict[str, Constraint] = {
+        "loc": constraints.real,
+        "scale": constraints.positive,
+    }
     support = constraints.real
-    has_rsample = True
-    _mean_carrier_measure = 0
+    has_rsample: bool = True
+    _mean_carrier_measure: float = 0
 
     @property
     def mean(self) -> Tensor:

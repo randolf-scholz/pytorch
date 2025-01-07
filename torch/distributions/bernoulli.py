@@ -5,6 +5,7 @@ from typing_extensions import Self
 import torch
 from torch import nan, Tensor
 from torch.distributions import constraints
+from torch.distributions.constraints import Constraint
 from torch.distributions.exp_family import ExponentialFamily
 from torch.distributions.utils import (
     broadcast_all,
@@ -38,10 +39,13 @@ class Bernoulli(ExponentialFamily):
         probs (Number, Tensor): the probability of sampling `1`
         logits (Number, Tensor): the log-odds of sampling `1`
     """
-    arg_constraints = {"probs": constraints.unit_interval, "logits": constraints.real}
+    arg_constraints: dict[str, Constraint] = {
+        "probs": constraints.unit_interval,
+        "logits": constraints.real,
+    }
     support = constraints.boolean
-    has_enumerate_support = True
-    _mean_carrier_measure = 0
+    has_enumerate_support: bool = True
+    _mean_carrier_measure: float = 0
 
     def __init__(
         self,
