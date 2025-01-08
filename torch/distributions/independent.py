@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Generic, Optional
 from typing_extensions import Self
 
 import torch
@@ -13,7 +13,10 @@ from torch.types import _size
 __all__ = ["Independent"]
 
 
-class Independent(Distribution):
+D = TypeVar("D", bound=Distribution)
+
+
+class Independent(Distribution, Generic[D]):
     r"""
     Reinterprets some of the batch dims of a distribution as event dims.
 
@@ -43,10 +46,11 @@ class Independent(Distribution):
             reinterpret as event dims
     """
     arg_constraints: dict[str, Constraint] = {}
+    base_dist: D
 
     def __init__(
         self,
-        base_distribution: Distribution,
+        base_distribution: D,
         reinterpreted_batch_ndims: int,
         validate_args: Optional[bool] = None,
     ) -> None:

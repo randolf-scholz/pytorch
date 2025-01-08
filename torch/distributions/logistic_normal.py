@@ -2,7 +2,7 @@ from typing import Optional, Union
 from typing_extensions import Self
 
 from torch import Tensor
-from torch.distributions import constraints
+from torch.distributions import constraints, Independent
 from torch.distributions.constraints import Constraint
 from torch.distributions.normal import Normal
 from torch.distributions.transformed_distribution import TransformedDistribution
@@ -42,7 +42,7 @@ class LogisticNormal(TransformedDistribution):
     }
     support = constraints.simplex  # type: ignore[assignment]
     has_rsample: bool = True
-    base_dist: Normal
+    base_dist: Independent[Normal]
 
     def __init__(
         self,
@@ -63,8 +63,8 @@ class LogisticNormal(TransformedDistribution):
 
     @property
     def loc(self) -> Tensor:
-        return self.base_dist.base_dist.loc  # type: ignore[attr-defined]
+        return self.base_dist.base_dist.loc
 
     @property
     def scale(self) -> Tensor:
-        return self.base_dist.base_dist.scale  # type: ignore[attr-defined]
+        return self.base_dist.base_dist.scale
