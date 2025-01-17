@@ -1,7 +1,6 @@
 # mypy: allow-untyped-decorators
 # mypy: allow-untyped-defs
 import math
-import numbers
 import warnings
 import weakref
 from typing import Optional, overload
@@ -109,17 +108,13 @@ class RNNBase(Module):
         self._flat_weight_refs: list[Optional[weakref.ReferenceType[Parameter]]] = []
         num_directions = 2 if bidirectional else 1
 
-        if (
-            not isinstance(dropout, numbers.Number)
-            or not 0 <= dropout <= 1
-            or isinstance(dropout, bool)
-        ):
+        if not (0 <= self.dropout <= 1):
             raise ValueError(
                 "dropout should be a number in range [0, 1] "
                 "representing the probability of an element being "
                 "zeroed"
             )
-        if dropout > 0 and num_layers == 1:
+        if self.dropout > 0 and num_layers == 1:
             warnings.warn(
                 "dropout option adds dropout after all but last "
                 "recurrent layer, so non-zero dropout expects "

@@ -1,8 +1,8 @@
 # mypy: allow-untyped-defs
 r"""Pruning methods."""
-import numbers
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
+from typing import Union
 
 import torch
 
@@ -1230,7 +1230,7 @@ def is_pruned(module):
     return False
 
 
-def _validate_pruning_amount_init(amount):
+def _validate_pruning_amount_init(amount: Union[int, float]) -> None:
     r"""Validate helper to check the range of amount at init.
 
     Args:
@@ -1248,11 +1248,11 @@ def _validate_pruning_amount_init(amount):
         This does not take into account the number of parameters in the
         tensor to be pruned, which is known only at prune.
     """
-    if not isinstance(amount, numbers.Real):
+    if not isinstance(amount, (int, float)):
         raise TypeError(f"Invalid type for amount: {amount}. Must be int or float.")
 
-    if (isinstance(amount, numbers.Integral) and amount < 0) or (
-        not isinstance(amount, numbers.Integral)  # so it's a float
+    if (isinstance(amount, int) and amount < 0) or (
+        not isinstance(amount, int)  # so it's a float
         and (float(amount) > 1.0 or float(amount) < 0.0)
     ):
         raise ValueError(
@@ -1260,7 +1260,7 @@ def _validate_pruning_amount_init(amount):
         )
 
 
-def _validate_pruning_amount(amount, tensor_size):
+def _validate_pruning_amount(amount: Union[int, float], tensor_size: int) -> None:
     r"""Validate that the pruning amount is meaningful wrt to the size of the data.
 
     Validation helper to check that the amount of parameters to prune
@@ -1278,7 +1278,8 @@ def _validate_pruning_amount(amount, tensor_size):
     # a number of units to prune that is greater than the number of units
     # left to prune. In this case, the tensor will just be fully pruned.
 
-    if isinstance(amount, numbers.Integral) and amount > tensor_size:
+    # FIXME: [0,1] check is missing for float amount
+    if isinstance(amount, int) and amount > tensor_size:
         raise ValueError(
             f"amount={amount} should be smaller than the number of parameters to prune={tensor_size}"
         )
@@ -1305,7 +1306,7 @@ def _validate_structured_pruning(t):
         )
 
 
-def _compute_nparams_toprune(amount, tensor_size):
+def _compute_nparams_toprune(amount: Union[int, float], tensor_size: int) -> int:
     r"""Convert the pruning amount from a percentage to absolute value.
 
     Since amount can be expressed either in absolute value or as a
@@ -1325,7 +1326,7 @@ def _compute_nparams_toprune(amount, tensor_size):
         int: the number of units to prune in the tensor
     """
     # incorrect type already checked in _validate_pruning_amount_init
-    if isinstance(amount, numbers.Integral):
+    if isinstance(amount, int):
         return amount
     else:
         return round(amount * tensor_size)

@@ -1,5 +1,4 @@
 # mypy: allow-untyped-defs
-import numbers
 from typing import Optional, Union
 
 import torch
@@ -185,7 +184,7 @@ class LayerNorm(Module):
     ) -> None:
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__()
-        if isinstance(normalized_shape, numbers.Integral):
+        if isinstance(normalized_shape, int):
             # mypy error: incompatible types in assignment
             normalized_shape = (normalized_shape,)  # type: ignore[assignment]
         self.normalized_shape = tuple(normalized_shape)  # type: ignore[arg-type]
@@ -373,7 +372,7 @@ class RMSNorm(Module):
     ) -> None:
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__()
-        if isinstance(normalized_shape, numbers.Integral):
+        if isinstance(normalized_shape, int):
             # mypy error: incompatible types in assignment
             normalized_shape = (normalized_shape,)  # type: ignore[assignment]
         self.normalized_shape = tuple(normalized_shape)  # type: ignore[arg-type]
