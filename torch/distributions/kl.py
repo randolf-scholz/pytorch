@@ -1,8 +1,8 @@
 import math
 import warnings
 from functools import total_ordering
-from typing import Callable, TypeVar, Union
-from typing_extensions import TypeAlias
+from typing import Any, Callable, Union
+from typing_extensions import Protocol, TypeAlias, TypeVar
 
 import torch
 from torch import inf, Tensor
@@ -38,21 +38,29 @@ from .uniform import Uniform
 from .utils import _sum_rightmost, euler_constant as _euler_gamma
 
 
-_KL_REGISTRY: dict[
-    tuple[type, type], Callable
-] = {}  # Source of truth mapping a few general (type, type) pairs to functions.
-_KL_MEMOIZE: dict[
-    tuple[type, type], Callable
-] = {}  # Memoized version mapping many specific (type, type) pairs to functions.
-
 __all__ = ["register_kl", "kl_divergence"]
 
 P = TypeVar("P", bound=Distribution)
 Q = TypeVar("Q", bound=Distribution)
+P2 = TypeVar("P2", bound=Distribution)
+Q2 = TypeVar("Q2", bound=Distribution)
 _KL: TypeAlias = Callable[[P, Q], Tensor]
 
+# NOTE: Technically, this should be annotated as a polymorphic mapping, but we keep it simple.
+# Source of truth mapping a few general (type, type) pairs to functions.
+_KL_REGISTRY: dict[tuple[type[Distribution], type[Distribution]], _KL[Any, Any]] = {}
+# Memoized version mapping many specific (type, type) pairs to functions.
+_KL_MEMOIZE: dict[tuple[type[Distribution], type[Distribution]], _KL[Any, Any]] = {}
 
-def register_kl(type_p: type[P], type_q: type[Q]) -> Callable[[_KL], _KL]:
+
+# NOTE: Technically, P2 and Q2 should be bound to P and Q, but this requires
+#   higher kinded types, which are currently not supported in Python.
+class _KL_Decorator(Protocol):
+    def __call__(self, arg: _KL[P2, Q2], /) -> _KL[P2, Q2]:
+        ...
+
+
+def register_kl(type_p: type[P], type_q: type[Q]) -> _KL_Decorator:
     """
     Decorator to register a pairwise function with :meth:`kl_divergence`.
     Usage::
@@ -87,7 +95,7 @@ def register_kl(type_p: type[P], type_q: type[Q]) -> Callable[[_KL], _KL]:
             f"Expected type_q to be a Distribution subclass but got {type_q}"
         )
 
-    def decorator(fun: Callable[[P, Q], Tensor]) -> Callable[[P, Q], Tensor]:
+    def decorator(fun: _KL[P2, Q2]) -> _KL[P2, Q2]:
         _KL_REGISTRY[type_p, type_q] = fun
         _KL_MEMOIZE.clear()  # reset since lookup order may have changed
         return fun
@@ -114,7 +122,7 @@ class _Match:
         return True
 
 
-def _dispatch_kl(type_p: type[Distribution], type_q: type[Distribution]) -> Callable:
+def _dispatch_kl(type_p: type[P], type_q: type[Q]) -> _KL[P, Q]:
     """
     Find the most specific approximate match, assuming single inheritance.
     """
@@ -973,7 +981,7 @@ def _kl_uniform_pareto(p: Uniform, q: Pareto) -> Tensor:
 
 
 @register_kl(Independent, Independent)
-def _kl_independent_independent(p: Independent, q: Independent) -> Tensor:
+def _kl_independent_independent(p: Independent[P], q: Independent[Q]) -> Tensor:
     if p.reinterpreted_batch_ndims != q.reinterpreted_batch_ndims:
         raise NotImplementedError
     result = kl_divergence(p.base_dist, q.base_dist)
