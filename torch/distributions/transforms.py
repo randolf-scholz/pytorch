@@ -597,7 +597,7 @@ class PowerTransform(Transform):
 
     @lazy_property
     def sign(self) -> int:  # type: ignore[override]
-        return self.exponent.sign()
+        return self.exponent.sign()  # type: ignore[return-value]
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, PowerTransform):

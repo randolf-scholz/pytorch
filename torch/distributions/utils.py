@@ -6,7 +6,7 @@ import torch
 import torch.nn.functional as F
 from torch import SymInt, Tensor
 from torch.overrides import is_tensor_like
-from torch.types import _dtype, _Number, Device
+from torch.types import _dtype, _Number, Device, Number
 
 
 euler_constant: Final[float] = 0.57721566490153286060  # Euler Mascheroni Constant
@@ -22,8 +22,9 @@ __all__ = [
 ]
 
 
-# FIXME: Use TypeVarTuple (*Ts) -> tuple[*Ts] with python 3.11
-def broadcast_all(*values):  # type: ignore[no-untyped-def]
+# FIXME: Use (*values: *Ts) -> tuple[Tensor for T in Ts] if Mapping-Type is ever added.
+#   See https://github.com/python/typing/issues/1216#issuecomment-2126153831
+def broadcast_all(*values: Union[Tensor, Number]) -> tuple[Tensor, ...]:
     r"""
     Given a list of values (possibly containing numbers), returns a list where each
     value is broadcasted based on the following rules:
