@@ -543,7 +543,7 @@ class ReshapeTransform(Transform):
             raise ValueError(
                 f"Shape mismatch: expected {shape[cut:]} but got {self.in_shape}"
             )
-        return shape[:cut] + self.out_shape  # type: ignore[return-value]
+        return shape[:cut] + self.out_shape
 
     def inverse_shape(self, shape: Size) -> Size:
         if len(shape) < len(self.out_shape):
@@ -553,7 +553,7 @@ class ReshapeTransform(Transform):
             raise ValueError(
                 f"Shape mismatch: expected {shape[cut:]} but got {self.out_shape}"
             )
-        return shape[:cut] + self.in_shape  # type: ignore[return-value]
+        return shape[:cut] + self.in_shape
 
 
 class ExpTransform(Transform):
@@ -900,7 +900,7 @@ class CorrCholeskyTransform(Transform):
         D = round((0.25 + 2 * N) ** 0.5 + 0.5)
         if D * (D - 1) // 2 != N:
             raise ValueError("Input is not a flattend lower-diagonal number")
-        return shape[:-1] + (D, D)  # type: ignore[return-value]
+        return shape[:-1] + (D, D)
 
     def inverse_shape(self, shape: Size) -> Size:
         # Reshape from (..., D, D) to (..., N).
@@ -910,7 +910,7 @@ class CorrCholeskyTransform(Transform):
             raise ValueError("Input is not square")
         D = shape[-1]
         N = D * (D - 1) // 2
-        return shape[:-2] + (N,)  # type: ignore[return-value]
+        return shape[:-2] + (N,)
 
 
 class SoftmaxTransform(Transform):
@@ -996,12 +996,12 @@ class StickBreakingTransform(Transform):
     def forward_shape(self, shape: Size) -> Size:
         if len(shape) < 1:
             raise ValueError("Too few dimensions on input")
-        return shape[:-1] + (shape[-1] + 1,)  # type: ignore[return-value]
+        return shape[:-1] + (shape[-1] + 1,)
 
     def inverse_shape(self, shape: Size) -> Size:
         if len(shape) < 1:
             raise ValueError("Too few dimensions on input")
-        return shape[:-1] + (shape[-1] - 1,)  # type: ignore[return-value]
+        return shape[:-1] + (shape[-1] - 1,)
 
 
 class LowerCholeskyTransform(Transform):
