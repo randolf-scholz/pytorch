@@ -125,14 +125,14 @@ class ConstraintRegistry:
         self,
         constraint: Union[Con, type[Con]],
         factory: None = ...,
-    ) -> Callable[[Factory[Con]], Factory[Con]]:
+    ) -> Union[Callable[[Factory[Con]], Factory[Con]]]:
         ...
 
     def register(
         self,
         constraint: Union[Con, type[Con]],
         factory: Optional[Factory[Con]] = None,
-    ) -> Factory[Con] | Callable[[Factory[Con]], Factory[Con]]:
+    ) -> Union[Factory[Con], Callable[[Factory[Con]], Factory[Con]]]:
         """
         Registers a :class:`~torch.distributions.constraints.Constraint`
         subclass in this registry. Usage::
