@@ -1,4 +1,4 @@
-from typing import Generic, Optional
+from typing import Generic, Optional, TypeVar
 from typing_extensions import Self
 
 import torch

@@ -6,7 +6,7 @@ import torch
 import torch.nn.functional as F
 from torch import SymInt, Tensor
 from torch.overrides import is_tensor_like
-from torch.types import _Number, _dtype, Device
+from torch.types import _dtype, _Number, Device
 
 
 euler_constant: Final[float] = 0.57721566490153286060  # Euler Mascheroni Constant

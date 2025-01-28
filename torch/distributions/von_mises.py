@@ -1,5 +1,5 @@
 import math
-from typing import Optional, Final
+from typing import Final, Optional
 from typing_extensions import Self
 
 import torch
