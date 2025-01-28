@@ -152,7 +152,7 @@ def _x_log_x(tensor: Tensor) -> Tensor:
     """
     Utility function for calculating x log x
     """
-    return tensor * tensor.log()  # FIXME: use torch.special.xlogy instead
+    return torch.special.xlogy(tensor, tensor)  # produces correct result for x=0
 
 
 def _batch_trace_XXT(bmat: Tensor) -> Tensor:

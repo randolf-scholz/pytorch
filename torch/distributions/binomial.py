@@ -55,7 +55,7 @@ class Binomial(Distribution):
 
     def __init__(
         self,
-        total_count: int = 1,
+        total_count: Union[Tensor, int] = 1,
         probs: Optional[Tensor] = None,
         logits: Optional[Tensor] = None,
         validate_args: Optional[bool] = None,

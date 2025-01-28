@@ -65,7 +65,6 @@ You can create your own registry by creating a new :class:`ConstraintRegistry`
 object.
 """
 
-import numbers
 from typing import Callable, Optional, overload, Union
 from typing_extensions import TypeAlias, TypeVar
 
@@ -90,6 +89,7 @@ from torch.distributions.constraints import (
     Stack,
 )
 from torch.distributions.transforms import Transform
+from torch.types import _Number
 
 
 __all__ = [
@@ -266,12 +266,10 @@ def _transform_to_less_than(constraint: LessThan) -> Transform:
 def _transform_to_interval(constraint: Union[Interval, HalfOpenInterval]) -> Transform:
     # Handle the special case of the unit interval.
     lower_is_0 = (
-        isinstance(constraint.lower_bound, numbers.Number)
-        and constraint.lower_bound == 0
+        isinstance(constraint.lower_bound, _Number) and constraint.lower_bound == 0
     )
     upper_is_1 = (
-        isinstance(constraint.upper_bound, numbers.Number)
-        and constraint.upper_bound == 1
+        isinstance(constraint.upper_bound, _Number) and constraint.upper_bound == 1
     )
     if lower_is_0 and upper_is_1:
         return transforms.SigmoidTransform()

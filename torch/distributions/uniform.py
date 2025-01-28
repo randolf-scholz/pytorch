@@ -1,4 +1,3 @@
-from numbers import Number
 from typing import Optional, Union
 from typing_extensions import Self
 
@@ -8,7 +7,7 @@ from torch.distributions import constraints
 from torch.distributions.constraints import Constraint
 from torch.distributions.distribution import Distribution
 from torch.distributions.utils import broadcast_all
-from torch.types import _size
+from torch.types import _Number, _size
 
 
 __all__ = ["Uniform"]
@@ -61,7 +60,7 @@ class Uniform(Distribution):
     ) -> None:
         self.low, self.high = broadcast_all(low, high)
 
-        if isinstance(low, Number) and isinstance(high, Number):
+        if isinstance(low, _Number) and isinstance(high, _Number):
             batch_shape = torch.Size()
         else:
             batch_shape = self.low.size()

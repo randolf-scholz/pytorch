@@ -1,6 +1,5 @@
 import functools
 import math
-import numbers
 import operator
 import weakref
 from collections.abc import Sequence
@@ -21,6 +20,7 @@ from torch.distributions.utils import (
     vec_to_tril_matrix,
 )
 from torch.nn.functional import pad, softplus
+from torch.types import _Number
 
 
 __all__ = [
@@ -493,7 +493,7 @@ class ReshapeTransform(Transform):
         in_shape (torch.Size): The input event shape.
         out_shape (torch.Size): The output event shape.
         cache_size (int): Size of cache. If zero, no caching is done. If one,
-            the latest single value is cached. Only 0 and 1 are supported.
+            the latest single value is cached. Only 0 and 1 are supported. (Default 0.)
     """
 
     bijective: bool = True
@@ -777,18 +777,14 @@ class AffineTransform(Transform):
         if not isinstance(other, AffineTransform):
             return False
 
-        if isinstance(self.loc, numbers.Number) and isinstance(
-            other.loc, numbers.Number
-        ):
+        if isinstance(self.loc, _Number) and isinstance(other.loc, _Number):
             if self.loc != other.loc:
                 return False
         else:
             if not (self.loc == other.loc).all().item():  # type: ignore[union-attr]
                 return False
 
-        if isinstance(self.scale, numbers.Number) and isinstance(
-            other.scale, numbers.Number
-        ):
+        if isinstance(self.scale, _Number) and isinstance(other.scale, _Number):
             if self.scale != other.scale:
                 return False
         else:
@@ -798,10 +794,10 @@ class AffineTransform(Transform):
         return True
 
     @property
-    def sign(self) -> int:
-        if isinstance(self.scale, numbers.Real):
+    def sign(self) -> Union[Tensor, int]:  # type: ignore[override]
+        if isinstance(self.scale, _Number):
             return 1 if float(self.scale) > 0 else -1 if float(self.scale) < 0 else 0
-        return int(self.scale.sign().prod().item())  # type: ignore[union-attr]
+        return self.scale.sign()
 
     def _call(self, x: Tensor) -> Tensor:
         return self.loc + self.scale * x
@@ -812,10 +808,10 @@ class AffineTransform(Transform):
     def log_abs_det_jacobian(self, x: Tensor, y: Tensor) -> Tensor:
         shape = x.shape
         scale = self.scale
-        if isinstance(scale, numbers.Real):
+        if isinstance(scale, _Number):
             result = torch.full_like(x, math.log(abs(scale)))
         else:
-            result = scale.abs().log()  # type: ignore[union-attr]
+            result = scale.abs().log()
         if self.event_dim:
             result_size = result.size()[: -self.event_dim] + (-1,)
             result = result.view(result_size).sum(-1)

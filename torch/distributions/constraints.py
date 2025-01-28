@@ -30,6 +30,7 @@ The following constraints are implemented:
 - ``constraints.symmetric``
 - ``constraints.unit_interval``
 """
+
 from collections.abc import Sequence
 from typing import Callable, Generic, Optional, TypeVar
 from typing_extensions import TypeAlias, TypeIs
@@ -209,11 +210,11 @@ class _DependentProperty(property, _Dependent, Generic[T, R]):
     """
 
     def __init__(
-        self,
-        fn: Optional[Callable[[T], R]] = None,
-        *,
-        is_discrete: bool = NotImplemented,
-        event_dim: int = NotImplemented,
+            self,
+            fn: Optional[Callable[[T], R]] = None,
+            *,
+            is_discrete: bool = NotImplemented,
+            event_dim: int = NotImplemented,
     ) -> None:
         property.__init__(self, fn)
         _Dependent.__init__(self, is_discrete=is_discrete, event_dim=event_dim)
