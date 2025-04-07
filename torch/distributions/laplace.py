@@ -28,6 +28,7 @@ class Laplace(Distribution):
         loc (float or Tensor): mean of the distribution
         scale (float or Tensor): scale of the distribution
     """
+
     arg_constraints: dict[str, Constraint] = {
         "loc": constraints.real,
         "scale": constraints.positive,

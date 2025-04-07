@@ -31,6 +31,7 @@ class Normal(ExponentialFamily):
         scale (float or Tensor): standard deviation of the distribution
             (often referred to as sigma)
     """
+
     arg_constraints: dict[str, Constraint] = {
         "loc": constraints.real,
         "scale": constraints.positive,

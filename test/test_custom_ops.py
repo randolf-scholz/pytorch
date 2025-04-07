@@ -45,6 +45,10 @@ from torch.testing._internal.custom_op_db import numpy_nonzero
 # Shadowed by `torch.testing._internal.common_utils.custom_op`
 from torch._custom_op.impl import custom_op  # usort: skip
 
+# Needed by TestTypeConversion.test_string_type:
+MyList = list
+MyTensor = torch.Tensor
+
 
 def requires_compile(fun):
     fun = unittest.skipIf(IS_WINDOWS, "torch.compile doesn't work with windows")(fun)
@@ -359,9 +363,19 @@ class TestCustomOpTesting(CustomOpTestCaseBase):
 
         x = torch.tensor(3.14159 / 3, requires_grad=True)
         with self.assertRaisesRegex(
-            optests.OpCheckError, "eager-mode PyTorch vs AOTAutograd"
+            optests.OpCheckError, "eager-mode PyTorch vs AOTDispatcher"
         ):
             torch.library.opcheck(op, (x,), {})
+
+        # Test that we can actually see the absolute difference numbers
+        try:
+            torch.library.opcheck(op, (x,), {})
+        except optests.OpCheckError as err:
+            orig = err.__context__.__context__
+            self.assertIn("Absolute difference:", str(orig))
+
+        # Test atol/rtol overrides
+        torch.library.opcheck(op, (x,), {}, atol=3, rtol=0.01)
 
     @ops(custom_op_db.custom_op_db, dtypes=OpDTypes.any_one)
     def test_opcheck_opinfo(self, device, dtype, op):
@@ -810,6 +824,22 @@ def _(x):
         schema = torch.library.infer_schema(foo_impl, op_name="myop", mutates_args={})
         self.assertExpectedInline(schema, "myop(Tensor x) -> Tensor")
 
+        # Ensure that a global in this file is properly found & evaluated.
+        def stringy_fn(x: torch.Tensor) -> "MyList[torch.Tensor]":
+            return [torch.randn_like(x)]
+
+        schema = infer_schema(stringy_fn, mutates_args={})
+        self.assertExpectedInline(schema, "(Tensor x) -> Tensor[]")
+
+        # Make sure that substrings are evaluated properly.
+        def substringy_fn(
+            x: torch.Tensor,
+        ) -> list["MyTensor"]:
+            return [torch.randn_like(x)]
+
+        schema = infer_schema(substringy_fn, mutates_args={})
+        self.assertExpectedInline(schema, "(Tensor x) -> Tensor[]")
+
     def test_infer_schema_unsupported(self):
         with self.assertRaisesRegex(ValueError, "varargs"):
 
@@ -845,6 +875,20 @@ def _(x):
                 raise NotImplementedError
 
             infer_schema(foo, mutates_args={"y"})
+
+        # Ensure that a global defined in infer_schema's file ISN'T found.
+        with self.assertRaisesRegex(
+            ValueError,
+            r"Unsupported type annotation list\[_TestTensor\]\. It is not a type\.",
+        ):
+
+            def stringy_bad_type(
+                x: torch.Tensor,
+            ) -> "list[_TestTensor]":
+                return [torch.randn_like(x)]
+
+            self.assertTrue(hasattr(torch._library.infer_schema, "_TestTensor"))
+            schema = infer_schema(stringy_bad_type, mutates_args={})
 
     def _generate_examples(self, typ):
         if typ is int:
@@ -1728,8 +1772,12 @@ def forward(self, x_1):
         self.assertExpectedInline(
             next(iter(counters["graph_break"].keys())).replace(";", "\n"),
             """\
-dynamic shape operator: _torch_testing.numpy_nonzero.default
- to enable, set torch._dynamo.config.capture_dynamic_output_shape_ops = True""",
+Dynamic shape operator
+  Explanation: Operator `_torch_testing.numpy_nonzero.default`'s output shape depends on input Tensor data.
+  Hint: Enable tracing of dynamic shape operators with `torch._dynamo.config.capture_dynamic_output_shape_ops = True`
+
+  Developer debug context: _torch_testing.numpy_nonzero.default
+""",
         )
 
     # pre-existing problem: torch.compile(dynamic=True) will, by default,
@@ -3861,6 +3909,127 @@ Please use `add.register_fake` to add an fake impl.""",
         result = torch.vmap(f)(x, y)
         self.assertTrue(called)
         self.assertEqual(result, x + y)
+
+    @skipIfTorchDynamo("Skip due to sys.refcount")
+    def test_any_requires_grad(self):
+        test_fn = torch._C._any_requires_grad
+        # Regression test on not leaking kwargs
+        t = torch.randn(2, 2)
+        t_refcount = sys.getrefcount(t)
+        test_fn(t, a=t)
+        self.assertEqual(sys.getrefcount(t), t_refcount)
+
+        self.assertTrue(
+            test_fn(
+                torch.zeros(1, requires_grad=True), torch.ones(1, requires_grad=True)
+            )
+        )
+        self.assertFalse(test_fn(torch.ones(1), torch.zeros(1)))
+        self.assertTrue(
+            test_fn(
+                [torch.zeros(1, requires_grad=True), torch.ones(1, requires_grad=True)]
+            )
+        )
+        # _C_any_requires_grad supports only List[Tensor] in args, not List[List[Tensor]]
+        self.assertFalse(test_fn([[torch.zeros(1, requires_grad=True)]], torch.ones(1)))
+        self.assertFalse(test_fn([torch.zeros(1), torch.ones(1)]))
+        self.assertTrue(test_fn(torch.zeros(1), a=torch.ones(1, requires_grad=True)))
+        self.assertFalse(test_fn(torch.zeros(1), a=torch.ones(1)))
+        self.assertTrue(
+            test_fn([torch.zeros(1, requires_grad=True), torch.ones(1)], torch.zeros(1))
+        )
+        self.assertFalse(test_fn([torch.zeros(1), torch.ones(1)], torch.zeros(1)))
+
+    @skipIfTorchDynamo("Skip due to sys.refcount")
+    def test_any_output_is_alias_to_input_or_output(self):
+        test_fn = torch._C._any_output_is_alias_to_input_or_output
+        # Regression test on not leaking kwargs
+        t = torch.randn(2, 2)
+        t_refcount = sys.getrefcount(t)
+        test_fn((t,), {"a": t}, ())
+        assert sys.getrefcount(t) == t_refcount
+
+        x = torch.randn(2, 2)
+        y = torch.randn(2, 2)
+        self.assertTrue(
+            test_fn(
+                (x,),
+                {},
+                (x.t(),),
+            )
+        )
+        self.assertFalse(test_fn((x,), None, (2 * x,)))
+        self.assertTrue(
+            test_fn(
+                (),
+                {"a": x.view(-1)},
+                (x,),
+            )
+        )
+        self.assertTrue(
+            test_fn(
+                (),
+                {"a": x.view(-1)},
+                (x.t(),),
+            )
+        )
+        self.assertTrue(test_fn((y,), {}, (y[1:],)))
+        self.assertFalse(
+            test_fn(
+                (x,),
+                {"a": x},
+                (),
+            )
+        )
+        self.assertFalse(
+            test_fn(
+                (torch.tensor([]),),
+                {},
+                (torch.tensor([]),),
+            )
+        )
+        self.assertTrue(
+            test_fn(
+                ([x], x + 1),
+                {},
+                (x.t(),),
+            )
+        )
+        self.assertTrue(
+            test_fn(
+                ([x], x + 1),
+                {},
+                ([x.t()], x + 1),
+            )
+        )
+        self.assertTrue(
+            test_fn(
+                ([x], x),
+                {},
+                ([x.t()], x + 1),
+            )
+        )
+        self.assertTrue(
+            test_fn(
+                ([x, 1], x),
+                {},
+                ([x.t()], x + 1),
+            )
+        )
+        self.assertTrue(
+            test_fn(
+                ([[x]], x),
+                {},
+                ([x.t()], x + 1),
+            )
+        )
+        self.assertTrue(
+            test_fn(
+                ([[1, x], 2], 3),
+                {},
+                ([x.t()], x + 1),
+            )
+        )
 
 
 class MiniOpTestOther(CustomOpTestCaseBase):

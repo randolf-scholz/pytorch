@@ -47,6 +47,7 @@ class ContinuousBernoulli(ExponentialFamily):
     autoencoders, Loaiza-Ganem G and Cunningham JP, NeurIPS 2019.
     https://arxiv.org/abs/1907.06845
     """
+
     arg_constraints: dict[str, Constraint] = {
         "probs": constraints.unit_interval,
         "logits": constraints.real,

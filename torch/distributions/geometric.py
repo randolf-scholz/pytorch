@@ -44,6 +44,7 @@ class Geometric(Distribution):
         probs (Number, Tensor): the probability of sampling `1`. Must be in range (0, 1]
         logits (Number, Tensor): the log-odds of sampling `1`.
     """
+
     arg_constraints: dict[str, Constraint] = {
         "probs": constraints.unit_interval,
         "logits": constraints.real,

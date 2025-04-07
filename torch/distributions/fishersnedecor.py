@@ -29,6 +29,7 @@ class FisherSnedecor(Distribution):
         df1 (float or Tensor): degrees of freedom parameter 1
         df2 (float or Tensor): degrees of freedom parameter 2
     """
+
     arg_constraints: dict[str, Constraint] = {
         "df1": constraints.positive,
         "df2": constraints.positive,

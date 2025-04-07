@@ -31,6 +31,7 @@ class StudentT(Distribution):
         loc (float or Tensor): mean of the distribution
         scale (float or Tensor): scale of the distribution
     """
+
     arg_constraints: dict[str, Constraint] = {
         "df": constraints.positive,
         "loc": constraints.real,

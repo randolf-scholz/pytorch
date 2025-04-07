@@ -22,7 +22,7 @@ suitable for coordinate-wise optimization algorithms like Adam::
 
     loc = torch.zeros(100, requires_grad=True)
     unconstrained = torch.zeros(100, requires_grad=True)
-    scale = transform_to(Normal.arg_constraints['scale'])(unconstrained)
+    scale = transform_to(Normal.arg_constraints["scale"])(unconstrained)
     loss = -Normal(loc, scale).log_prob(data).sum()
 
 The ``biject_to()`` registry is useful for Hamiltonian Monte Carlo, where
@@ -117,16 +117,14 @@ class ConstraintRegistry:
         self,
         constraint: Union[Con, type[Con]],
         factory: Factory[Con],
-    ) -> Factory[Con]:
-        ...
+    ) -> Factory[Con]: ...
 
     @overload  # decorator usage
     def register(
         self,
         constraint: Union[Con, type[Con]],
         factory: None = ...,
-    ) -> Union[Callable[[Factory[Con]], Factory[Con]]]:
-        ...
+    ) -> Union[Callable[[Factory[Con]], Factory[Con]]]: ...
 
     def register(
         self,
@@ -170,9 +168,9 @@ class ConstraintRegistry:
         Looks up a transform to constrained space, given a constraint object.
         Usage::
 
-            constraint = Normal.arg_constraints['scale']
+            constraint = Normal.arg_constraints["scale"]
             scale = transform_to(constraint)(torch.zeros(1))  # constrained
-            u = transform_to(constraint).inv(scale)           # unconstrained
+            u = transform_to(constraint).inv(scale)  # unconstrained
 
         Args:
             constraint (:class:`~torch.distributions.constraints.Constraint`):
@@ -238,7 +236,7 @@ def _transform_to_positive(constraint: Union[Positive, NonNegative]) -> Transfor
 @transform_to.register(constraints.greater_than)
 @transform_to.register(constraints.greater_than_eq)
 def _transform_to_greater_than(
-    constraint: Union[GreaterThan, GreaterThanEq]
+    constraint: Union[GreaterThan, GreaterThanEq],
 ) -> Transform:
     return transforms.ComposeTransform(
         [
@@ -300,7 +298,7 @@ def _transform_to_lower_cholesky(constraint: LowerCholesky) -> Transform:
 @transform_to.register(constraints.positive_definite)  # type: ignore[arg-type]
 @transform_to.register(constraints.positive_semidefinite)
 def _transform_to_positive_definite(
-    constraint: Union[PositiveDefinite, PositiveSemidefinite]
+    constraint: Union[PositiveDefinite, PositiveSemidefinite],
 ) -> Transform:
     return transforms.PositiveDefiniteTransform()
 

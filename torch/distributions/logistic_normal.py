@@ -36,6 +36,7 @@ class LogisticNormal(TransformedDistribution):
         tensor([ 0.7653,  0.0341,  0.0579,  0.1427])
 
     """
+
     arg_constraints: dict[str, Constraint] = {
         "loc": constraints.real,
         "scale": constraints.positive,

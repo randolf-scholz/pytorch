@@ -46,6 +46,7 @@ class Binomial(Distribution):
         probs (Tensor): Event probabilities
         logits (Tensor): Event log-odds
     """
+
     arg_constraints: dict[str, Constraint] = {
         "total_count": constraints.nonnegative_integer,
         "probs": constraints.unit_interval,

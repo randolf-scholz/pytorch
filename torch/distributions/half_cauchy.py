@@ -32,6 +32,7 @@ class HalfCauchy(TransformedDistribution):
     Args:
         scale (float or Tensor): scale of the full Cauchy distribution
     """
+
     arg_constraints: dict[str, Constraint] = {"scale": constraints.positive}
     support = constraints.nonnegative  # type: ignore[assignment]
     has_rsample: bool = True

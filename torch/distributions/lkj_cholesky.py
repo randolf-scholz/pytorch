@@ -61,6 +61,7 @@ class LKJCholesky(Distribution):
     Daniel Lewandowski, Dorota Kurowicka, Harry Joe.
     Journal of Multivariate Analysis. 100. 10.1016/j.jmva.2009.04.008
     """
+
     arg_constraints: dict[str, Constraint] = {"concentration": constraints.positive}
     support = constraints.corr_cholesky
 

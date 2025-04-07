@@ -123,6 +123,7 @@ class MultivariateNormal(Distribution):
         :attr:`precision_matrix` is passed instead, it is only used to compute
         the corresponding lower triangular matrices using a Cholesky decomposition.
     """
+
     arg_constraints: dict[str, Constraint] = {
         "loc": constraints.real_vector,
         "covariance_matrix": constraints.positive_definite,

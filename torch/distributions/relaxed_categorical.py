@@ -38,6 +38,7 @@ class ExpRelaxedCategorical(Distribution):
     [2] Categorical Reparametrization with Gumbel-Softmax
     (Jang et al., 2017)
     """
+
     arg_constraints: dict[str, Constraint] = {
         "probs": constraints.simplex,
         "logits": constraints.real_vector,
@@ -128,6 +129,7 @@ class RelaxedOneHotCategorical(TransformedDistribution):
         probs (Tensor): event probabilities
         logits (Tensor): unnormalized log probability for each event
     """
+
     arg_constraints: dict[str, Constraint] = {
         "probs": constraints.simplex,
         "logits": constraints.real_vector,

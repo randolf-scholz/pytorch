@@ -26,6 +26,7 @@ class Chi2(Gamma):
     Args:
         df (float or Tensor): shape parameter of the distribution
     """
+
     arg_constraints: dict[str, Constraint] = {"df": constraints.positive}
 
     def __init__(
