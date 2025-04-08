@@ -1223,7 +1223,7 @@ class TestDistributions(DistributionsTestCase):
     _do_cuda_memory_leak_check = True
     _do_cuda_non_default_stream = True
 
-    def _gradcheck_log_prob(self, dist_ctor: type[D], ctor_params: Any) -> None:
+    def _gradcheck_log_prob(self, dist_ctor: Callable[..., D], ctor_params: Any) -> None:
         # performs gradient checks on log_prob
         distribution = dist_ctor(*ctor_params)
         s = distribution.sample()
@@ -1334,7 +1334,7 @@ class TestDistributions(DistributionsTestCase):
         self.assertGreater(p, failure_rate, message)
 
     def _check_enumerate_support(
-        self, dist: type[Distribution], examples: list[dict, object]
+        self, dist: type[Distribution], examples: list[tuple[dict, object]]
     ) -> None:
         for params, expected in examples:
             params = {k: torch.tensor(v) for k, v in params.items()}
@@ -1671,7 +1671,7 @@ class TestDistributions(DistributionsTestCase):
 
     def test_binomial_stable(self) -> None:
         logits = torch.tensor([-100.0, 100.0], dtype=torch.float)
-        total_count = 1.0
+        total_count = 1
         x = torch.tensor([0.0, 0.0], dtype=torch.float)
         log_prob = Binomial(total_count, logits=logits).log_prob(x)
         self.assertTrue(torch.isfinite(log_prob).all())
@@ -1859,7 +1859,7 @@ class TestDistributions(DistributionsTestCase):
             torch.tensor([[total_count, 0], [0, total_count]], dtype=torch.float64),
         )
 
-    def test_multinomial_sequential_draw(self):
+    def test_multinomial_sequential_draw(self) -> None:
         # Adapted after script mentioned in https://github.com/pytorch/pytorch/issues/132395
         torch.manual_seed(0xDE0B6B3A764007E8)
         prob = torch.ones(26)
@@ -2252,6 +2252,8 @@ class TestDistributions(DistributionsTestCase):
         c.backward(torch.ones_like(c))
         self.assertEqual(loc.grad, torch.ones_like(scale))
         self.assertEqual(scale.grad, eps)
+        assert loc.grad is not None
+        assert scale.grad is not None
         loc.grad.zero_()
         scale.grad.zero_()
 
@@ -3164,7 +3166,7 @@ class TestDistributions(DistributionsTestCase):
         # check gradients
         # Modified and applied the same tests for multivariate_normal
         def wishart_log_prob_gradcheck(
-            df: Optional[int] = None,
+            df: int | Tensor,
             covariance: Optional[Tensor] = None,
             precision: Optional[Tensor] = None,
             scale_tril: Optional[Tensor] = None,
@@ -4583,6 +4585,7 @@ class TestRsample(DistributionsTestCase):
             x.sum().backward()
             x, ind = x.sort()
             x = x.detach().numpy()
+            assert alphas.grad is not None
             actual_grad = alphas.grad[ind].numpy()[:, 0]
             # Compare with expected gradient dx/dalpha0 along constant cdf(x,alpha).
             # This reduces to a distribution Beta(alpha[0], alpha[1] + alpha[2]).
@@ -6159,7 +6162,9 @@ class TestNumericalStability(DistributionsTestCase):
             return log_lik
 
         def expec_grad(
-            x: Tensor, probs: Optional[Tensor] = None, logits: Optional[Tensor] = None
+            x: Tensor | float,
+            probs: Optional[Tensor | float] = None,
+            logits: Optional[Tensor|float] = None
         ) -> Tensor:
             assert not (probs is None and logits is None)
             if logits is not None:
