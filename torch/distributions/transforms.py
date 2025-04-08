@@ -20,7 +20,7 @@ from torch.distributions.utils import (
     vec_to_tril_matrix,
 )
 from torch.nn.functional import pad, softplus
-from torch.types import _Number
+from torch.types import _Number, _size
 
 
 __all__ = [
@@ -287,16 +287,18 @@ class ComposeTransform(Transform):
     The transforms being composed are responsible for caching.
 
     Args:
-        parts (list of :class:`Transform`): A list of transforms to compose.
+        parts (sequence of :class:`Transform`): A sequence of transforms to compose.
         cache_size (int): Size of cache. If zero, no caching is done. If one,
             the latest single value is cached. Only 0 and 1 are supported.
     """
 
-    def __init__(self, parts: list[Transform], cache_size: int = 0) -> None:
+    parts: Sequence[Transform]
+
+    def __init__(self, parts: Sequence[Transform], cache_size: int = 0) -> None:
         if cache_size:
             parts = [part.with_cache(cache_size) for part in parts]
         super().__init__(cache_size=cache_size)
-        self.parts = parts
+        self.parts = list(parts)
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, ComposeTransform):
@@ -500,8 +502,8 @@ class ReshapeTransform(Transform):
 
     def __init__(
         self,
-        in_shape: torch.Size,
-        out_shape: torch.Size,
+        in_shape: _size,
+        out_shape: _size,
         cache_size: int = 0,
     ) -> None:
         self.in_shape = torch.Size(in_shape)
@@ -588,7 +590,7 @@ class PowerTransform(Transform):
     codomain = constraints.positive
     bijective: bool = True
 
-    def __init__(self, exponent: Tensor, cache_size: int = 0) -> None:
+    def __init__(self, exponent: Union[Tensor, float], cache_size: int = 0) -> None:
         super().__init__(cache_size=cache_size)
         (self.exponent,) = broadcast_all(exponent)
 
