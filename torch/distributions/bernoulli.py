@@ -13,7 +13,7 @@ from torch.distributions.utils import (
     probs_to_logits,
 )
 from torch.nn.functional import binary_cross_entropy_with_logits
-from torch.types import _Number, _size, Number
+from torch.types import _Number, _size
 
 
 __all__ = ["Bernoulli"]
@@ -35,8 +35,8 @@ class Bernoulli(ExponentialFamily):
         tensor([ 0.])
 
     Args:
-        probs (Number, Tensor): the probability of sampling `1`
-        logits (Number, Tensor): the log-odds of sampling `1`
+        probs (float or Tensor): the probability of sampling `1`
+        logits (float or Tensor): the log-odds of sampling `1`
     """
 
     arg_constraints: dict[str, Constraint] = {
@@ -49,8 +49,8 @@ class Bernoulli(ExponentialFamily):
 
     def __init__(
         self,
-        probs: Optional[Union[Tensor, Number]] = None,
-        logits: Optional[Union[Tensor, Number]] = None,
+        probs: Optional[Union[Tensor, float]] = None,
+        logits: Optional[Union[Tensor, float]] = None,
         validate_args: Optional[bool] = None,
     ) -> None:
         if (probs is None) == (logits is None):

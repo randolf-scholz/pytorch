@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from typing import Optional, Union
 from typing_extensions import Self
 
@@ -50,18 +51,20 @@ class TransformedDistribution(Distribution):
     """
 
     arg_constraints: dict[str, Constraint] = {}
+    base_dist: Distribution
+    transforms: Sequence[Transform]
 
     def __init__(
         self,
         base_distribution: Distribution,
-        transforms: Union[Transform, list[Transform]],
+        transforms: Union[Transform, Sequence[Transform]],
         validate_args: Optional[bool] = None,
     ) -> None:
         if isinstance(transforms, Transform):
             self.transforms = [
                 transforms,
             ]
-        elif isinstance(transforms, list):
+        elif isinstance(transforms, Sequence):
             if not all(isinstance(t, Transform) for t in transforms):
                 raise ValueError(
                     "transforms must be a Transform or a list of Transforms"
