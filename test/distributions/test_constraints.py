@@ -1,7 +1,7 @@
 # Owner(s): ["module: distributions"]
 
-from typing import TypeAlias, TypeVar, Union
-from typing_extensions import Unpack
+from typing import TypeVar, Union
+from typing_extensions import TypeAlias, Unpack
 
 import pytest
 
@@ -92,7 +92,7 @@ C = TypeVar("C", bound=Constraint)
 
 
 def build_constraint(
-    constraint_fn: C | type[C],
+    constraint_fn: Union[C, type[C]],
     args: tuple,
     is_cuda: bool = False,
 ) -> C:

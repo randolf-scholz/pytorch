@@ -141,16 +141,14 @@ class _SupportSampling(Protocol):
         ...
 
 
-def pairwise(
-    Dist: type[Distribution], *params: Any
-) -> tuple[Distribution, Distribution]:
+def pairwise(Dist: type[D], *params: Any) -> tuple[D, D]:
     """
     Creates a pair of distributions `Dist` initialized to test each element of
     param with each other.
     """
     params1 = [torch.tensor([p] * len(p)) for p in params]
     params2 = [p.transpose(0, 1) for p in params1]
-    return Dist(*params1), Dist(*params2)
+    return Dist(*params1), Dist(*params2)  # type: ignore[arg-type]
 
 
 def is_all_nan(tensor: Tensor) -> Tensor:
@@ -3178,7 +3176,7 @@ class TestDistributions(DistributionsTestCase):
         # check gradients
         # Modified and applied the same tests for multivariate_normal
         def wishart_log_prob_gradcheck(
-            df: int | Tensor,
+            df: Union[Tensor, int],
             covariance: Optional[Tensor] = None,
             precision: Optional[Tensor] = None,
             scale_tril: Optional[Tensor] = None,
@@ -3375,7 +3373,7 @@ class TestDistributions(DistributionsTestCase):
         self._check_log_prob(Exponential(rate), ref_log_prob)
         self._check_forward_ad(lambda x: x.exponential_())
 
-        def mean_var(lambd: Union[Tensor, float], sample: Tensor) -> None:
+        def mean_var(lambd: float, sample: Tensor) -> None:
             sample.exponential_(lambd)
             mean = sample.float().mean()
             var = sample.float().var()
@@ -4104,7 +4102,7 @@ class TestDistributions(DistributionsTestCase):
                 except NotImplementedError:
                     continue
                 rel_error = torch.abs(actual - samples) / (1e-10 + torch.abs(samples))
-                self.assertLess(
+                self.assertLess(  # type: ignore[misc]
                     rel_error.max(),
                     1e-4,
                     msg="\n".join(
@@ -4122,8 +4120,8 @@ class TestDistributions(DistributionsTestCase):
         for concentration, log_prob in [(0.5, inf), (1, 0), (2, -inf)]:
             dist = Gamma(concentration, 1)
             scipy_dist = scipy.stats.gamma(concentration)
-            self.assertAlmostEqual(dist.log_prob(0), log_prob)
-            self.assertAlmostEqual(dist.log_prob(0), scipy_dist.logpdf(0))
+            self.assertAlmostEqual(dist.log_prob(0), log_prob)  # type: ignore[arg-type]
+            self.assertAlmostEqual(dist.log_prob(0), scipy_dist.logpdf(0))  # type: ignore[arg-type]
 
     @set_default_dtype(torch.double)
     def test_cdf_log_prob(self) -> None:
@@ -4800,7 +4798,7 @@ class TestRsample(DistributionsTestCase):
             # This is a modification of the standard continuity equation, using the product rule to allow
             # expression in terms of log_prob rather than the less numerically stable log_prob.exp().
             error = dlogp_da + (dlogp_dx * v).sum(-1) + div_v
-            self.assertLess(
+            self.assertLess(  # type: ignore[misc]
                 torch.abs(error).max(),
                 0.005,
                 "\n".join(
@@ -5661,7 +5659,7 @@ class TestKL(DistributionsTestCase):
                 error = torch.abs(expected - actual) / (1 + expected)
                 if error[error == error].max() < self.precision:
                     break
-            self.assertLess(
+            self.assertLess(  # type: ignore[misc]
                 error[error == error].max(),
                 self.precision,
                 "\n".join(
@@ -5704,7 +5702,7 @@ class TestKL(DistributionsTestCase):
                 error = torch.abs(expected - actual) / (1 + expected)
                 if error[error == error].max() < self.precision:
                     break
-            self.assertLess(
+            self.assertLess(  # type: ignore[misc]
                 error[error == error].max(),
                 self.precision,
                 "\n".join(
@@ -5784,7 +5782,7 @@ class TestKL(DistributionsTestCase):
             actual_full_lowrank = kl_divergence(p_full, q)
 
             error_lowrank_lowrank = torch.abs(actual_lowrank_lowrank - expected).max()
-            self.assertLess(
+            self.assertLess(  # type: ignore[misc]
                 error_lowrank_lowrank,
                 self.precision,
                 "\n".join(
@@ -5797,7 +5795,7 @@ class TestKL(DistributionsTestCase):
             )
 
             error_lowrank_full = torch.abs(actual_lowrank_full - expected).max()
-            self.assertLess(
+            self.assertLess(  # type: ignore[misc]
                 error_lowrank_full,
                 self.precision,
                 "\n".join(
@@ -5810,7 +5808,7 @@ class TestKL(DistributionsTestCase):
             )
 
             error_full_lowrank = torch.abs(actual_full_lowrank - expected).max()
-            self.assertLess(
+            self.assertLess(  # type: ignore[misc]
                 error_full_lowrank,
                 self.precision,
                 "\n".join(
@@ -6204,12 +6202,12 @@ class TestNumericalStability(DistributionsTestCase):
                 aux = math.pow(probs - 0.5, 2)
                 log_norm_const = math.log(2.0) + (4.0 / 3.0 + 104.0 / 45.0 * aux) * aux
             log_lik = bern_log_lik + log_norm_const
-            return log_lik
+            return torch.as_tensor(log_lik)
 
         def expec_grad(
-            x: Tensor | float,
-            probs: Optional[Tensor | float] = None,
-            logits: Optional[Tensor | float] = None,
+            x: Union[Tensor, float],
+            probs: Optional[Union[Tensor, float]] = None,
+            logits: Optional[Union[Tensor, float]] = None,
         ) -> Tensor:
             assert not (probs is None and logits is None)
             if logits is not None:
