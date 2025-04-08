@@ -39,6 +39,9 @@ class Cauchy(Distribution):
     support = constraints.real
     has_rsample: bool = True
 
+    loc: Tensor
+    scale: Tensor
+
     def __init__(
         self,
         loc: Union[Tensor, float],

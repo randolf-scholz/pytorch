@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, Optional, Union
 from typing_extensions import Self
 
 import torch
@@ -47,16 +47,17 @@ class ExpRelaxedCategorical(Distribution):
         constraints.real_vector
     )  # The true support is actually a submanifold of this.
     has_rsample: bool = True
+    temperature: Tensor
 
     def __init__(
         self,
-        temperature: Tensor,
+        temperature: Union[Tensor, float],
         probs: Optional[Tensor] = None,
         logits: Optional[Tensor] = None,
         validate_args: Optional[bool] = None,
     ) -> None:
         self._categorical = Categorical(probs, logits)
-        self.temperature = temperature
+        (self.temperature, ) = broadcast_all(temperature)
         batch_shape = self._categorical.batch_shape
         event_shape = self._categorical.param_shape[-1:]
         super().__init__(batch_shape, event_shape, validate_args=validate_args)
@@ -140,7 +141,7 @@ class RelaxedOneHotCategorical(TransformedDistribution):
 
     def __init__(
         self,
-        temperature: Tensor,
+        temperature: Union[Tensor, float],
         probs: Optional[Tensor] = None,
         logits: Optional[Tensor] = None,
         validate_args: Optional[bool] = None,

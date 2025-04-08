@@ -50,6 +50,7 @@ class TransformedDistribution(Distribution):
     """
 
     arg_constraints: dict[str, Constraint] = {}
+    base_dist: Distribution
 
     def __init__(
         self,

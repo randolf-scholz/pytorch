@@ -47,14 +47,16 @@ class LogitRelaxedBernoulli(Distribution):
     }
     support = constraints.real
 
+    temperature: Tensor
+
     def __init__(
         self,
-        temperature: Tensor,
+        temperature: Union[Tensor, float],
         probs: Optional[Union[Tensor, Number]] = None,
         logits: Optional[Union[Tensor, Number]] = None,
         validate_args: Optional[bool] = None,
     ) -> None:
-        self.temperature = temperature
+        (self.temperature,) = broadcast_all(temperature)
         if (probs is None) == (logits is None):
             raise ValueError(
                 "Either `probs` or `logits` must be specified, but not both."
@@ -151,7 +153,7 @@ class RelaxedBernoulli(TransformedDistribution):
 
     def __init__(
         self,
-        temperature: Tensor,
+        temperature: Union[Tensor, float],
         probs: Optional[Union[Tensor, Number]] = None,
         logits: Optional[Union[Tensor, Number]] = None,
         validate_args: Optional[bool] = None,

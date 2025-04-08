@@ -124,7 +124,7 @@ class Distribution:
         raise NotImplementedError
 
     @property
-    def support(self) -> Optional[Constraint]:
+    def support(self) -> Constraint:
         """
         Returns a :class:`~torch.distributions.constraints.Constraint` object
         representing this distribution's support.

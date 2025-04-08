@@ -37,6 +37,8 @@ class Gumbel(TransformedDistribution):
         "scale": constraints.positive,
     }
     support = constraints.real  # type: ignore[assignment]
+    loc: Tensor
+    scale: Tensor
 
     def __init__(
         self,
