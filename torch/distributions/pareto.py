@@ -1,7 +1,9 @@
 from typing import Optional, Union
+from typing_extensions import Self
 
 from torch import Tensor
 from torch.distributions import constraints
+from torch.distributions.constraints import Constraint
 from torch.distributions.exponential import Exponential
 from torch.distributions.transformed_distribution import TransformedDistribution
 from torch.distributions.transforms import AffineTransform, ExpTransform
@@ -27,7 +29,11 @@ class Pareto(TransformedDistribution):
         scale (float or Tensor): Scale parameter of the distribution
         alpha (float or Tensor): Shape parameter of the distribution
     """
-    arg_constraints = {"alpha": constraints.positive, "scale": constraints.positive}
+
+    arg_constraints: dict[str, Constraint] = {
+        "alpha": constraints.positive,
+        "scale": constraints.positive,
+    }
 
     def __init__(
         self,
@@ -40,9 +46,7 @@ class Pareto(TransformedDistribution):
         transforms = [ExpTransform(), AffineTransform(loc=0, scale=self.scale)]
         super().__init__(base_dist, transforms, validate_args=validate_args)
 
-    def expand(
-        self, batch_shape: _size, _instance: Optional["Pareto"] = None
-    ) -> "Pareto":
+    def expand(self, batch_shape: _size, _instance: Optional[Self] = None) -> Self:
         new = self._get_checked_instance(Pareto, _instance)
         new.scale = self.scale.expand(batch_shape)
         new.alpha = self.alpha.expand(batch_shape)
@@ -65,7 +69,7 @@ class Pareto(TransformedDistribution):
         return self.scale.pow(2) * a / ((a - 1).pow(2) * (a - 2))
 
     @constraints.dependent_property(is_discrete=False, event_dim=0)
-    def support(self) -> constraints.Constraint:
+    def support(self) -> Constraint:  # type: ignore[override]
         return constraints.greater_than_eq(self.scale)
 
     def entropy(self) -> Tensor:

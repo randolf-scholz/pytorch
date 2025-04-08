@@ -1,10 +1,10 @@
-# mypy: allow-untyped-defs
-from numbers import Number
 from typing import Optional, Union
+from typing_extensions import Self
 
 import torch
 from torch import Tensor
 from torch.distributions import constraints
+from torch.distributions.constraints import Constraint
 from torch.distributions.distribution import Distribution
 from torch.distributions.utils import (
     broadcast_all,
@@ -13,6 +13,7 @@ from torch.distributions.utils import (
     probs_to_logits,
 )
 from torch.nn.functional import binary_cross_entropy_with_logits
+from torch.types import _Number, _size, Number
 
 
 __all__ = ["Geometric"]
@@ -43,7 +44,11 @@ class Geometric(Distribution):
         probs (Number, Tensor): the probability of sampling `1`. Must be in range (0, 1]
         logits (Number, Tensor): the log-odds of sampling `1`.
     """
-    arg_constraints = {"probs": constraints.unit_interval, "logits": constraints.real}
+
+    arg_constraints: dict[str, Constraint] = {
+        "probs": constraints.unit_interval,
+        "logits": constraints.real,
+    }
     support = constraints.nonnegative_integer
 
     def __init__(
@@ -58,13 +63,14 @@ class Geometric(Distribution):
             )
         if probs is not None:
             (self.probs,) = broadcast_all(probs)
-        if logits is not None:  # Note: 'if is None' instead of 'else' to help mypy
+        else:
+            assert logits is not None  # helps mypy
             (self.logits,) = broadcast_all(logits)
         probs_or_logits = probs if probs is not None else logits
-        if isinstance(probs_or_logits, Number):
+        if isinstance(probs_or_logits, _Number):
             batch_shape = torch.Size()
         else:
-            assert probs_or_logits is not None
+            assert probs_or_logits is not None  # helps mypy
             batch_shape = probs_or_logits.size()
         super().__init__(batch_shape, validate_args=validate_args)
         if self._validate_args and probs is not None:
@@ -80,7 +86,7 @@ class Geometric(Distribution):
                     f"to be positive but found invalid values:\n{invalid_value}"
                 )
 
-    def expand(self, batch_shape, _instance=None):
+    def expand(self, batch_shape: _size, _instance: Optional[Self] = None) -> Self:
         new = self._get_checked_instance(Geometric, _instance)
         batch_shape = torch.Size(batch_shape)
         if "probs" in self.__dict__:
@@ -111,7 +117,7 @@ class Geometric(Distribution):
     def probs(self) -> Tensor:
         return logits_to_probs(self.logits, is_binary=True)
 
-    def sample(self, sample_shape=torch.Size()):
+    def sample(self, sample_shape: _size = torch.Size()) -> Tensor:
         shape = self._extended_shape(sample_shape)
         tiny = torch.finfo(self.probs.dtype).tiny
         with torch.no_grad():
@@ -123,7 +129,7 @@ class Geometric(Distribution):
                 u = self.probs.new(shape).uniform_(tiny, 1)
             return (u.log() / (-self.probs).log1p()).floor()
 
-    def log_prob(self, value):
+    def log_prob(self, value: Tensor) -> Tensor:
         if self._validate_args:
             self._validate_sample(value)
         value, probs = broadcast_all(value, self.probs)
@@ -131,7 +137,7 @@ class Geometric(Distribution):
         probs[(probs == 1) & (value == 0)] = 0
         return value * (-probs).log1p() + self.probs.log()
 
-    def entropy(self):
+    def entropy(self) -> Tensor:
         return (
             binary_cross_entropy_with_logits(self.logits, self.probs, reduction="none")
             / self.probs

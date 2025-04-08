@@ -40,6 +40,8 @@ T = TypeVar("T", bound="Module")
 class _IncompatibleKeys(
     namedtuple("IncompatibleKeys", ["missing_keys", "unexpected_keys"]),
 ):
+    __slots__ = ()
+
     def __repr__(self):
         if not self.missing_keys and not self.unexpected_keys:
             return "<All keys matched successfully>"
@@ -443,14 +445,14 @@ class Module:
     _is_full_backward_hook: Optional[bool]
     _forward_hooks: dict[int, Callable]
     # Marks whether the corresponding _forward_hooks accept kwargs or not.
-    # As JIT does not support Set[int], this dict is used as a set, where all
+    # As JIT does not support set[int], this dict is used as a set, where all
     # hooks represented in this dict accept kwargs.
     _forward_hooks_with_kwargs: dict[int, bool]
     # forward hooks that should always be called even if an exception is raised
     _forward_hooks_always_called: dict[int, bool]
     _forward_pre_hooks: dict[int, Callable]
     # Marks whether the corresponding _forward_hooks accept kwargs or not.
-    # As JIT does not support Set[int], this dict is used as a set, where all
+    # As JIT does not support set[int], this dict is used as a set, where all
     # hooks represented in this dict accept kwargs.
     _forward_pre_hooks_with_kwargs: dict[int, bool]
     _state_dict_hooks: dict[int, Callable]
@@ -693,9 +695,9 @@ class Module:
             torch.nn.Module: The submodule referenced by ``target``
 
         Raises:
-            AttributeError: If the target string references an invalid
-                path or resolves to something that is not an
-                ``nn.Module``
+            AttributeError: If at any point along the path resulting from
+                the target string the (sub)path resolves to a non-existent
+                attribute name or an object that is not an instance of ``nn.Module``.
         """
         if target == "":
             return self
@@ -706,19 +708,27 @@ class Module:
         for item in atoms:
             if not hasattr(mod, item):
                 raise AttributeError(
-                    mod._get_name() + " has no " "attribute `" + item + "`"
+                    mod._get_name() + " has no attribute `" + item + "`"
                 )
 
             mod = getattr(mod, item)
 
             if not isinstance(mod, torch.nn.Module):
-                raise AttributeError("`" + item + "` is not " "an nn.Module")
+                raise AttributeError("`" + item + "` is not an nn.Module")
 
         return mod
 
-    def set_submodule(self, target: str, module: "Module") -> None:
+    def set_submodule(
+        self, target: str, module: "Module", strict: bool = False
+    ) -> None:
         """
         Set the submodule given by ``target`` if it exists, otherwise throw an error.
+
+        .. note::
+            If ``strict`` is set to ``False`` (default), the method will replace an existing submodule
+            or create a new submodule if the parent module exists. If ``strict`` is set to ``True``,
+            the method will only attempt to replace an existing submodule and throw an error if
+            the submodule does not exist.
 
         For example, let's say you have an ``nn.Module`` ``A`` that
         looks like this:
@@ -728,9 +738,9 @@ class Module:
             A(
                 (net_b): Module(
                     (net_c): Module(
-                        (conv): Conv2d(16, 33, kernel_size=(3, 3), stride=(2, 2))
+                        (conv): Conv2d(3, 3, 3)
                     )
-                    (linear): Linear(in_features=100, out_features=200, bias=True)
+                    (linear): Linear(3, 3)
                 )
             )
 
@@ -738,42 +748,56 @@ class Module:
         submodule ``net_b``, which itself has two submodules ``net_c``
         and ``linear``. ``net_c`` then has a submodule ``conv``.)
 
-        To overide the ``Conv2d`` with a new submodule ``Linear``, you
-        would call
-        ``set_submodule("net_b.net_c.conv", nn.Linear(33, 16))``.
+        To override the ``Conv2d`` with a new submodule ``Linear``, you
+        could call ``set_submodule("net_b.net_c.conv", nn.Linear(1, 1))``
+        where ``strict`` could be ``True`` or ``False``
+
+        To add a new submodule ``Conv2d`` to the existing ``net_b`` module,
+        you would call ``set_submodule("net_b.conv", nn.Conv2d(1, 1, 1))``.
+
+        In the above if you set ``strict=True`` and call
+        ``set_submodule("net_b.conv", nn.Conv2d(1, 1, 1), strict=True)``, an AttributeError
+        will be raised because ``net_b`` does not have a submodule named ``conv``.
 
         Args:
             target: The fully-qualified string name of the submodule
                 to look for. (See above example for how to specify a
                 fully-qualified string.)
             module: The module to set the submodule to.
+            strict: If ``False``, the method will replace an existing submodule
+                or create a new submodule if the parent module exists. If ``True``,
+                the method will only attempt to replace an existing submodule and throw an error
+                if the submodule doesn't already exist.
 
         Raises:
-            ValueError: If the target string is empty
-            AttributeError: If the target string references an invalid
-                path or resolves to something that is not an
-                ``nn.Module``
+            ValueError: If the ``target`` string is empty or if ``module`` is not an instance of ``nn.Module``.
+            AttributeError: If at any point along the path resulting from
+                the ``target`` string the (sub)path resolves to a non-existent
+                attribute name or an object that is not an instance of ``nn.Module``.
         """
         if target == "":
             raise ValueError("Cannot set the submodule without a target name!")
 
         atoms: list[str] = target.split(".")
-        name = atoms.pop(-1)
-        mod: torch.nn.Module = self
+        if not isinstance(module, torch.nn.Module):
+            raise ValueError(
+                "`" + "module" + f"` is not an nn.Module, found {type(module)}"
+            )
+        if len(atoms) == 1:
+            parent: torch.nn.Module = self
+        else:
+            parent_key = ".".join(atoms[:-1])
+            parent = self.get_submodule(parent_key)
 
-        for item in atoms:
-            if not hasattr(mod, item):
-                raise AttributeError(
-                    mod._get_name() + " has no attribute `" + item + "`"
-                )
-
-            mod = getattr(mod, item)
-
-            # Use isinstance instead of type here to also handle subclass of nn.Module
+        if strict and not hasattr(parent, atoms[-1]):
+            raise AttributeError(
+                parent._get_name() + " has no attribute `" + atoms[-1] + "`"
+            )
+        if hasattr(parent, atoms[-1]):
+            mod = getattr(parent, atoms[-1])
             if not isinstance(mod, torch.nn.Module):
-                raise AttributeError("`" + item + "` is not an nn.Module")
-
-        setattr(mod, name, module)
+                raise AttributeError("`" + atoms[-1] + "` is not an nn.Module")
+        setattr(parent, atoms[-1], module)
 
     def get_parameter(self, target: str) -> "Parameter":
         """Return the parameter given by ``target`` if it exists, otherwise throw an error.
@@ -807,7 +831,7 @@ class Module:
         param: torch.nn.Parameter = getattr(mod, param_name)
 
         if not isinstance(param, torch.nn.Parameter):
-            raise AttributeError("`" + param_name + "` is not an " "nn.Parameter")
+            raise AttributeError("`" + param_name + "` is not an nn.Parameter")
 
         return param
 
@@ -1360,9 +1384,9 @@ class Module:
             hook (Callable): The user-defined hook to be registered.
             prepend (bool): If true, the provided ``hook`` will be fired before
                 all existing ``backward_pre`` hooks on this
-                :class:`torch.nn.modules.Module`. Otherwise, the provided
+                :class:`torch.nn.Module`. Otherwise, the provided
                 ``hook`` will be fired after all existing ``backward_pre`` hooks
-                on this :class:`torch.nn.modules.Module`. Note that global
+                on this :class:`torch.nn.Module`. Note that global
                 ``backward_pre`` hooks registered with
                 :func:`register_module_full_backward_pre_hook` will fire before
                 all hooks registered by this method.
@@ -1440,9 +1464,9 @@ class Module:
             hook (Callable): The user-defined hook to be registered.
             prepend (bool): If true, the provided ``hook`` will be fired before
                 all existing ``backward`` hooks on this
-                :class:`torch.nn.modules.Module`. Otherwise, the provided
+                :class:`torch.nn.Module`. Otherwise, the provided
                 ``hook`` will be fired after all existing ``backward`` hooks on
-                this :class:`torch.nn.modules.Module`. Note that global
+                this :class:`torch.nn.Module`. Note that global
                 ``backward`` hooks registered with
                 :func:`register_module_full_backward_hook` will fire before
                 all hooks registered by this method.
@@ -1604,9 +1628,9 @@ class Module:
             hook (Callable): The user defined hook to be registered.
             prepend (bool): If true, the provided ``hook`` will be fired before
                 all existing ``forward_pre`` hooks on this
-                :class:`torch.nn.modules.Module`. Otherwise, the provided
+                :class:`torch.nn.Module`. Otherwise, the provided
                 ``hook`` will be fired after all existing ``forward_pre`` hooks
-                on this :class:`torch.nn.modules.Module`. Note that global
+                on this :class:`torch.nn.Module`. Note that global
                 ``forward_pre`` hooks registered with
                 :func:`register_module_forward_pre_hook` will fire before all
                 hooks registered by this method.
@@ -1665,9 +1689,9 @@ class Module:
             hook (Callable): The user defined hook to be registered.
             prepend (bool): If ``True``, the provided ``hook`` will be fired
                 before all existing ``forward`` hooks on this
-                :class:`torch.nn.modules.Module`. Otherwise, the provided
+                :class:`torch.nn.Module`. Otherwise, the provided
                 ``hook`` will be fired after all existing ``forward`` hooks on
-                this :class:`torch.nn.modules.Module`. Note that global
+                this :class:`torch.nn.Module`. Note that global
                 ``forward`` hooks registered with
                 :func:`register_module_forward_hook` will fire before all hooks
                 registered by this method.

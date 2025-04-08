@@ -1,10 +1,11 @@
-# mypy: allow-untyped-defs
-from typing import Optional
+from typing import Any, Optional
+from typing_extensions import Self
 
 import torch
 from torch import Tensor
 from torch.distributions import constraints
 from torch.distributions.categorical import Categorical
+from torch.distributions.constraints import Constraint
 from torch.distributions.distribution import Distribution
 from torch.distributions.transformed_distribution import TransformedDistribution
 from torch.distributions.transforms import ExpTransform
@@ -37,11 +38,15 @@ class ExpRelaxedCategorical(Distribution):
     [2] Categorical Reparametrization with Gumbel-Softmax
     (Jang et al., 2017)
     """
-    arg_constraints = {"probs": constraints.simplex, "logits": constraints.real_vector}
+
+    arg_constraints: dict[str, Constraint] = {
+        "probs": constraints.simplex,
+        "logits": constraints.real_vector,
+    }
     support = (
         constraints.real_vector
     )  # The true support is actually a submanifold of this.
-    has_rsample = True
+    has_rsample: bool = True
 
     def __init__(
         self,
@@ -56,7 +61,7 @@ class ExpRelaxedCategorical(Distribution):
         event_shape = self._categorical.param_shape[-1:]
         super().__init__(batch_shape, event_shape, validate_args=validate_args)
 
-    def expand(self, batch_shape, _instance=None):
+    def expand(self, batch_shape: _size, _instance: Optional[Self] = None) -> Self:
         new = self._get_checked_instance(ExpRelaxedCategorical, _instance)
         batch_shape = torch.Size(batch_shape)
         new.temperature = self.temperature
@@ -67,7 +72,7 @@ class ExpRelaxedCategorical(Distribution):
         new._validate_args = self._validate_args
         return new
 
-    def _new(self, *args, **kwargs):
+    def _new(self, *args: Any, **kwargs: Any) -> Tensor:
         return self._categorical._new(*args, **kwargs)
 
     @property
@@ -91,7 +96,7 @@ class ExpRelaxedCategorical(Distribution):
         scores = (self.logits + gumbels) / self.temperature
         return scores - scores.logsumexp(dim=-1, keepdim=True)
 
-    def log_prob(self, value):
+    def log_prob(self, value: Tensor) -> Tensor:
         K = self._categorical._num_events
         if self._validate_args:
             self._validate_sample(value)
@@ -124,9 +129,13 @@ class RelaxedOneHotCategorical(TransformedDistribution):
         probs (Tensor): event probabilities
         logits (Tensor): unnormalized log probability for each event
     """
-    arg_constraints = {"probs": constraints.simplex, "logits": constraints.real_vector}
-    support = constraints.simplex
-    has_rsample = True
+
+    arg_constraints: dict[str, Constraint] = {
+        "probs": constraints.simplex,
+        "logits": constraints.real_vector,
+    }
+    support = constraints.simplex  # type: ignore[assignment]
+    has_rsample: bool = True
     base_dist: ExpRelaxedCategorical
 
     def __init__(
@@ -141,7 +150,7 @@ class RelaxedOneHotCategorical(TransformedDistribution):
         )
         super().__init__(base_dist, ExpTransform(), validate_args=validate_args)
 
-    def expand(self, batch_shape, _instance=None):
+    def expand(self, batch_shape: _size, _instance: Optional[Self] = None) -> Self:
         new = self._get_checked_instance(RelaxedOneHotCategorical, _instance)
         return super().expand(batch_shape, _instance=new)
 
